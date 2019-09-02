@@ -22,9 +22,3 @@ if __name__ == "__main__":
     entity = entity_list[0]
     plot_entity(entity)
 
-    # todo
-    # daj KarmaLego kodo v drug direktorij in na svoj github
-
-
-
-

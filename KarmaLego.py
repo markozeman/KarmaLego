@@ -1,21 +1,42 @@
-import matplotlib.pyplot as plt
-import numpy as np
 from entities import entity_list
+from helpers import *
+
+"""
+Implementation of KarmaLego algorithm based on the article: 
+Robert Moskovitch, Yuval Shahar: 
+Temporal Patterns Discovery from Multivariate Time Series via Temporal Abstraction and Time-Interval Mining
+
+Link: https://pdfs.semanticscholar.org/a800/83f16631756d0865e13f679c2d5084df03ae.pdf
+"""
 
 
-def plot_entity(entity):
-    colors = ['r', 'c', 'y', 'k', 'g', 'b', 'm']
-    labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+class Karma:
+    """
+    Implementation of Karma part of KarmaLego algorithm.
+    """
+    def __init__(self):
+        pass
 
-    for i, label in enumerate(labels):
-        for od, do in entity[label]:
-            plt.hlines(i + 1, od, do, colors=colors[i])
 
-    plt.yticks(np.arange(7) + 1, labels=labels)
-    plt.xticks(np.arange(21))
-    plt.xlabel('time')
-    plt.ylabel('state')
-    plt.show()
+
+class Lego:
+    """
+    Implementation of Lego part of KarmaLego algorithm.
+    """
+
+    def __init__(self):
+        pass
+
+
+
+class KarmaLego:
+    """
+    Implementation of KarmaLego algorithm.
+    """
+
+    def __init__(self):
+        pass
+
 
 
 if __name__ == "__main__":

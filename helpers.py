@@ -58,7 +58,7 @@ def temporal_relations(ti_1, ti_2, epsilon, max_distance):
     elif B_start - A_start > epsilon and A_end - B_end > epsilon:   # contains
         return 'c'
     elif B_start - A_start > epsilon and abs(B_end - A_end) <= epsilon:     # finish by
-        return 'fi'
+        return 'f'
     elif abs(B_start - A_start) <= epsilon and abs(B_end - A_end) <= epsilon:   # equal
         return '='
     elif abs(B_start - A_start) <= epsilon and B_end - A_end > epsilon:     # starts
@@ -70,17 +70,17 @@ def temporal_relations(ti_1, ti_2, epsilon, max_distance):
 
 
 
-
-
-def vertical_support(entity_list, TIRP, min_ver_supp):
+def vertical_support_symbol(entity_list, symbol, min_ver_supp):
     """
-    Check if TIRP is present in at least min_ver_supp entities.
+    Check if symbol is present in at least min_ver_supp proportion of entities.
 
     :param entity_list: list of all entities
-    :param TIRP: time interval relation pattern
+    :param symbol: symbol existing in at least one entity
     :param min_ver_supp: proportion (value between 0-1) defining threshold for accepting TIRP
-    :return: boolean - True if given TIRP has at least min_ver_supp support, otherwise False
+    :return: boolean - True if given symbol has at least min_ver_supp support, otherwise False
+             integer - value of symbol support
     """
+    pass
 
 
 

@@ -68,8 +68,6 @@ def temporal_relations(ti_1, ti_2, epsilon, max_distance):
         return '?'
 
 
-
-
 def vertical_support_symbol(entity_list, symbol, min_ver_supp):
     """
     Check if symbol is present in at least min_ver_supp proportion of entities.
@@ -81,6 +79,58 @@ def vertical_support_symbol(entity_list, symbol, min_ver_supp):
              integer - value of symbol support
     """
     pass
+    # todo
+
+
+
+
+def find_match_recursively(symbol_occurrences, curr_number, arr_number, indices):
+    """
+    Find if TIRP symbols match entity symbols with recursive function.
+
+    :param symbol_occurrences: 2D list with TIRP symbols occurrences in entity symbols
+    :param curr_number: current index in entity symbols list
+    :param arr_number: index of list in symbol_occurrences
+    :param indices: list of indices of symbols matching, length at the end of the function = len(symbol_occurrences)
+    :return: indices after recursion or None if it is not a match
+    """
+    if arr_number >= len(symbol_occurrences):
+        return indices
+    curr_array = symbol_occurrences[arr_number]
+    for x in curr_array:
+        if x > curr_number:
+            indices.append(x)
+            res = find_match_recursively(symbol_occurrences, x, arr_number + 1, indices)
+            if res is not None:
+                return res
+    return None
+
+
+def check_symbols_lexicographically(entity_symbols, tirp_symbols):
+    """
+    Check if symbols in entity and TIRP are lexicographically equivalent. That means that symbols in entity
+    are in the same lexicographical order as in TIRP, but they do not have to be consecutive.
+
+    :param entity_symbols: list of lexicographically ordered entity symbols
+    :param tirp_symbols: list of lexicographically ordered TIRP symbols
+    :return: list - indices in entity list where symbols match the TIRP symbols
+    """
+    symbol_occurrences = [list(filter(lambda i: entity_symbols[i] == tirp_sym, range(len(entity_symbols)))) for tirp_sym in tirp_symbols]
+    indices = find_match_recursively(symbol_occurrences, -1, 0, [])
+    return indices
+
+
+
+
+
+if __name__ == "__main__":
+    entity_symbols = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'a', 'k', 'b', 'b', 'l', 'd']
+    tirp_symbols = ['a', 'b', 'd', 'b', 'b', 'd']
+
+    i = check_symbols_lexicographically(entity_symbols, tirp_symbols)
+    print(i)
+
+
 
 
 

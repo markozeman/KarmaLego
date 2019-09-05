@@ -7,7 +7,7 @@ Link: https://pdfs.semanticscholar.org/a800/83f16631756d0865e13f679c2d5084df03ae
 """
 
 from entities import entity_list
-from helpers import *
+from help_functions import *
 
 
 class TIRP:
@@ -32,9 +32,11 @@ class TIRP:
         self.symbols = [] if symbols is None else symbols
         self.relations = [] if relations is None else relations
         self.k = k
+        self.epsilon = 0    # maximum amount of time between two events that we consider it as the same time
+        self.max_distance = 100    # maximum distance between two time intervals that first still influences the second
         self.vertical_support = vertical_support
-        self.entity_indices_supporting = indices_supporting
-        self.parent_entity_indices_supporting = parent_indices_supporting
+        self.entity_indices_supporting = None
+        self.parent_entity_indices_supporting = None
 
     def extend(self, new_symbol, new_relations):
         """
@@ -92,29 +94,52 @@ class TIRP:
                 print('-' * (4 * len(self.symbols) - 1))
         print('\n')
 
-    def vertical_support_TIRP(self, entity_list, TIRP, min_ver_supp):
+    def is_above_vertical_support(self, entity_list, min_ver_supp):
         """
-        Check if TIRP is present in at least min_ver_supp proportion of entities.
+        Check if this TIRP is present in at least min_ver_supp proportion of entities.
 
         :param entity_list: list of all entities
-        :param TIRP: time interval relation pattern
         :param min_ver_supp: proportion (value between 0-1) defining threshold for accepting TIRP
         :return: boolean - True if given TIRP has at least min_ver_supp support, otherwise False
         """
+        if not self.check_size():
+            print('TIRP symbols and relations lists do not have compatible size!')
+            return None
+
         # check only entities from entity list that supported parent (smaller) TIRP
-        entity_list_reduced = list(np.array(entity_list)[self.parent_entity_indices_supporting])
+        if self.parent_entity_indices_supporting is not None:
+            entity_list_reduced = list(np.array(entity_list)[self.parent_entity_indices_supporting])
+        else:
+            entity_list_reduced = entity_list
 
-        # stej ustrezne indexe
+        supporting_indices = []
         for index, entity in enumerate(entity_list_reduced):
-            # preglej če ima entity leksikografsko urejene simbole od TIRPa in če relacije v zadnjem stolpcu ustrezajo
-            # če ustrezajo shrani index
-            pass
+            lexi_sorted = lexicographic_sorting(entity)
+            entity_ti = list(map(lambda s: (s[0], s[1]), lexi_sorted))
+            entity_symbols = list(map(lambda s: s[2], lexi_sorted))
+            if len(self.symbols) <= len(entity_symbols):
+                matching_indices = check_symbols_lexicographically(entity_symbols, self.symbols)
+                if matching_indices is not None:     # lexicographic match found, check relations in last column of TIRP
+                    *entity_symbols_ti, last_symbol_ti = list(np.array(entity_ti)[matching_indices])
+                    last_column_relations = self.relations[-(len(self.symbols) - 1):]
+                    relations_match = True
 
+                    for rel, symbol_ti in zip(last_column_relations, entity_symbols_ti):
+                        if rel != temporal_relations(symbol_ti, last_symbol_ti, self.epsilon, self.max_distance):
+                            relations_match = False
+                            break
 
-        # set integer value of TIRP vertical support
+                    if relations_match:
+                        supporting_indices.append(index)
 
+        self.vertical_support = len(supporting_indices) / len(entity_list)
 
-        # set entity list indices supporting
+        if self.parent_entity_indices_supporting is not None:
+            self.entity_indices_supporting = list(np.array(self.parent_entity_indices_supporting)[supporting_indices])
+        else:
+            self.entity_indices_supporting = supporting_indices
+
+        return self.vertical_support >= min_ver_supp
 
 
 
@@ -151,10 +176,18 @@ if __name__ == "__main__":
     # plot_entity(entity)
 
     tirp = TIRP()
+    # tirp.symbols = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+    # tirp.relations = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'r', 's', 't', 'u', 'v']
 
-    tirp.symbols = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-    tirp.relations = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'r', 's', 't', 'u', 'v']
+    # e1
+    tirp.symbols = ['A', 'B', 'C', 'B', 'D']
+    tirp.relations = ['o', 'm', 'o', '<', '<', 'o', '<', '<', '<', '<']
+
+    # e2
+    # tirp.symbols = ['B', 'C', 'A', 'B', 'C', 'D']
+    # tirp.relations = ['m', '<', 'o', '<', '<', '<', '<', '<', '<', '=', '<', '<', '<', '=', '=']
+
     tirp.print()
 
-
-
+    print(tirp.is_above_vertical_support(entity_list, 0.1))
+    print(tirp.vertical_support)

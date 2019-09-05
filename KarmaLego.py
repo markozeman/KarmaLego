@@ -35,8 +35,8 @@ class TIRP:
         self.epsilon = 0    # maximum amount of time between two events that we consider it as the same time
         self.max_distance = 100    # maximum distance between two time intervals that first still influences the second
         self.vertical_support = vertical_support
-        self.entity_indices_supporting = None
-        self.parent_entity_indices_supporting = None
+        self.entity_indices_supporting = None if indices_supporting is None else indices_supporting
+        self.parent_entity_indices_supporting = None if parent_indices_supporting is None else parent_indices_supporting
 
     def extend(self, new_symbol, new_relations):
         """

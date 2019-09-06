@@ -118,20 +118,23 @@ class TIRP:
             entity_ti = list(map(lambda s: (s[0], s[1]), lexi_sorted))
             entity_symbols = list(map(lambda s: s[2], lexi_sorted))
             if len(self.symbols) <= len(entity_symbols):
-                matching_indices = check_symbols_lexicographically(entity_symbols, self.symbols)
-                if matching_indices is not None:     # lexicographic match found, check relations in last column of TIRP
-                    *entity_symbols_ti, last_symbol_ti = list(np.array(entity_ti)[matching_indices])
+                matching_indices = check_symbols_lexicographically(entity_symbols, self.symbols, 'all')
+                if matching_indices is not None and matching_indices != [None]:     # lexicographic match found, check relations in last column of TIRP
                     last_column_relations = self.relations[-(len(self.symbols) - 1):]
-                    relations_match = True
 
-                    for rel, symbol_ti in zip(last_column_relations, entity_symbols_ti):
-                        if rel != temporal_relations(symbol_ti, last_symbol_ti, self.epsilon, self.max_distance):
-                            relations_match = False
-                            break
+                    for matching_option in matching_indices:
+                        *entity_symbols_ti, last_symbol_ti = list(np.array(entity_ti)[list(matching_option)])
+                        relations_match = True
 
-                    if relations_match:
-                        supporting_indices.append(index)
+                        for rel, symbol_ti in zip(last_column_relations, entity_symbols_ti):
+                            if rel != temporal_relations(symbol_ti, last_symbol_ti, self.epsilon, self.max_distance):
+                                relations_match = False
+                                break
 
+                        if relations_match:
+                            supporting_indices.append(index)
+
+        supporting_indices = list(set(supporting_indices))     # make list unique because it can have more matches in one entity
         self.vertical_support = len(supporting_indices) / len(entity_list)
 
         if self.parent_entity_indices_supporting is not None:

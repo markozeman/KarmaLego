@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import itertools
+import time
+from entities import entity_list
 
 
 def plot_entity(entity):
@@ -65,7 +68,7 @@ def temporal_relations(ti_1, ti_2, epsilon, max_distance):
         return 's'
     else:
         print('Wrong temporal relation!')
-        return '?'
+        return None
 
 
 def vertical_support_symbol(entity_list, symbol, min_ver_supp):
@@ -73,15 +76,18 @@ def vertical_support_symbol(entity_list, symbol, min_ver_supp):
     Check if symbol is present in at least min_ver_supp proportion of entities.
 
     :param entity_list: list of all entities
-    :param symbol: symbol existing in at least one entity
+    :param symbol: string of symbol existing in at least one entity
     :param min_ver_supp: proportion (value between 0-1) defining threshold for accepting TIRP
     :return: boolean - True if given symbol has at least min_ver_supp support, otherwise False
              integer - value of symbol support
     """
-    pass
-    # todo
+    support_count = 0
+    for entity in entity_list:
+        if symbol in list(entity.keys()) and len(entity[symbol]) != 0:
+            support_count += 1
 
-
+    support = support_count / len(entity_list)
+    return support >= min_ver_supp, support
 
 
 def find_match_recursively(symbol_occurrences, curr_number, arr_number, indices):
@@ -106,30 +112,61 @@ def find_match_recursively(symbol_occurrences, curr_number, arr_number, indices)
     return None
 
 
-def check_symbols_lexicographically(entity_symbols, tirp_symbols):
+def find_all_possible_matches(symbol_occurrences):
+    """
+     Find if TIRP symbols match entity symbols. Find all possible solutions.
+
+    :param symbol_occurrences: 2D list with TIRP symbols occurrences in entity symbols
+    :return: 2D list of indices or None if no match is found
+    """
+    all_options = list(itertools.product(*symbol_occurrences))
+    possible_options = list(filter(filter_for_matches, all_options))
+    return possible_options if len(possible_options) != 0 else None
+
+
+def filter_for_matches(lst):
+    """
+    Filter for finding only possible matches.
+
+    :param lst: list of numbers (indices)
+    :return: True if numbers in lst are strictly increasing, otherwise False
+    """
+    for item_1, item_2 in zip(lst, lst[1:]):
+        if item_1 >= item_2:
+            return False
+    return True
+
+
+def check_symbols_lexicographically(entity_symbols, tirp_symbols, single_or_all='all'):
     """
     Check if symbols in entity and TIRP are lexicographically equivalent. That means that symbols in entity
     are in the same lexicographical order as in TIRP, but they do not have to be consecutive.
 
     :param entity_symbols: list of lexicographically ordered entity symbols
     :param tirp_symbols: list of lexicographically ordered TIRP symbols
-    :return: list - indices in entity list where symbols match the TIRP symbols
+    :param single_or_all: string with possible values 'all' or 'single'
+    :return: 2D list - list of all possible indices in entity list where symbols match the TIRP symbols (if 'all')
+             2D list with only one element - indices in entity list where symbols match the TIRP symbols (if 'single')
     """
     symbol_occurrences = [list(filter(lambda i: entity_symbols[i] == tirp_sym, range(len(entity_symbols)))) for tirp_sym in tirp_symbols]
-    indices = find_match_recursively(symbol_occurrences, -1, 0, [])
-    return indices
+    if single_or_all == 'all':
+        return find_all_possible_matches(symbol_occurrences)
+    elif single_or_all == 'single':
+        return [find_match_recursively(symbol_occurrences, -1, 0, [])]
 
 
 
 
 
 if __name__ == "__main__":
-    entity_symbols = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'a', 'k', 'b', 'b', 'l', 'd']
+    entity_symbols = ['a', 'b', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'a', 'k', 'b', 'b', 'l', 'd', 'd']
     tirp_symbols = ['a', 'b', 'd', 'b', 'b', 'd']
 
-    i = check_symbols_lexicographically(entity_symbols, tirp_symbols)
+    i = check_symbols_lexicographically(entity_symbols, tirp_symbols, 'single')
     print(i)
 
+
+    print(vertical_support_symbol(entity_list, 'C', 0.1))
 
 
 

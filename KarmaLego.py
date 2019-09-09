@@ -10,6 +10,30 @@ from entities import entity_list
 from help_functions import *
 
 
+class TreeNode:
+    """
+    Implementation of tree structure of nodes representing enumerated tree of TIRPs in KarmaLego.
+    """
+
+    def __init__(self, data=None):
+        """
+        Initialize TreeNode instance with given data and set its children to empty list.
+
+        :param data: data for a given TreeNode
+        """
+        self.data = data
+        self.children = []
+
+    def add_child(self, child):
+        """
+        Add child to the children list.
+
+        :param child: child node to append
+        :return: None
+        """
+        self.children.append(child)
+
+
 class TIRP:
     """
     Representation of Time Interval Relation Pattern (TIRP) with two lists.
@@ -19,7 +43,7 @@ class TIRP:
     def __init__(self, symbols=None, relations=None, k=1, vertical_support=None,
                  indices_supporting=None, parent_indices_supporting=None):
         """
-        Initializes TIRP instance with default or given values.
+        Initialize TIRP instance with default or given values.
 
         :param symbols: list of symbols presenting entity in lexicographic order (labels for upper triangular matrix)
         :param relations: list of Allen's temporal relations, presenting upper triangular matrix (half matrix),
@@ -151,8 +175,58 @@ class Karma:
     Implementation of Karma part of KarmaLego algorithm.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, epsilon, max_distance, min_ver_supp):
+        """
+        Initialize Karma instance and set needed parameters.
+
+        :param epsilon: maximum amount of time between two events that we consider it as the same time
+        :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
+        :param min_ver_supp: maximum distance between two time intervals that means first one still influences the second
+        """
+        self.epsilon = epsilon
+        self.max_distance = max_distance
+        self.min_ver_supp = min_ver_supp
+
+    def run(self):
+        """
+        Run Karma part of algorithm.
+
+        :return: tree of up to 2-sized frequent TIRPs
+        """
+        print('\n')
+        # print(entity_list)
+
+        all_symbols = list(set(sum([list(entity.keys()) for entity in entity_list], [])))
+        print(all_symbols)
+
+        for entity in entity_list:
+            ordered_symbols = lexicographic_sorting(entity)
+            print(ordered_symbols)
+
+            # iterate through all ordered pairs
+            for i in range(len(ordered_symbols)):
+                for j in range(i + 1, len(ordered_symbols)):
+                    start_1, end_1, symbol_1 = ordered_symbols[i]
+                    start_2, end_2, symbol_2 = ordered_symbols[j]
+                    print(start_1, end_1, symbol_1, '  ', start_2, end_2, symbol_2)
+
+                    # check temporal relation between 2 time intervals
+
+
+                    # make a TIRP, save it in list/dict and count occurrences of it through loops
+
+
+            # delete break
+            break
+
+
+        # prune TIRPs that don't have at least min_ver_supp
+
+
+        # assign other TIRPs with enough support to the tree
+        tree = TreeNode()
+
+
 
 
 class Lego:
@@ -194,3 +268,10 @@ if __name__ == "__main__":
 
     print(tirp.is_above_vertical_support(entity_list, 0.1))
     print(tirp.vertical_support)
+
+    epsilon = 0
+    min_ver_supp = 0.1
+    max_distance = 100
+
+    karma = Karma(epsilon, min_ver_supp, max_distance)
+    karma.run()

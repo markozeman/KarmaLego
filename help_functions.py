@@ -126,7 +126,7 @@ def find_all_possible_matches(symbol_occurrences):
 
 def filter_for_matches(lst):
     """
-    Filter for finding only possible matches.
+    Filter for finding only possible matches depending on list strictly increasing.
 
     :param lst: list of numbers (indices)
     :return: True if numbers in lst are strictly increasing, otherwise False
@@ -155,6 +155,15 @@ def check_symbols_lexicographically(entity_symbols, tirp_symbols, single_or_all=
         return [find_match_recursively(symbol_occurrences, -1, 0, [])]
 
 
+def are_TIRPs_equal(tirp_1, tirp_2):
+    """
+    Check if two TIRPs are exactly the same.
+
+    :param tirp_1: first TIRP
+    :param tirp_2: second TIRP
+    :return: boolean - True if TIRPS are the same, else False
+    """
+    return tirp_1.symbols == tirp_2.symbols and tirp_1.relations == tirp_2.relations
 
 
 

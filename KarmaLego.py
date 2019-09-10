@@ -7,6 +7,7 @@ Link: https://pdfs.semanticscholar.org/a800/83f16631756d0865e13f679c2d5084df03ae
 """
 
 from entities import entity_list
+from copy import deepcopy
 from help_functions import *
 
 
@@ -26,12 +27,23 @@ class TreeNode:
 
     def add_child(self, child):
         """
-        Add child to the children list.
+        Add child TreeNode to the children list.
 
         :param child: child node to append
         :return: None
         """
         self.children.append(child)
+
+    def print_tree(self):
+        """
+        Recursive method for printing tree of TIRPs in pre-order Depth First Search.
+
+        :return: None
+        """
+        if isinstance(self.data, TIRP):
+            print(self.data)
+        for child in self.children:
+            child.print_tree()
 
 
 class TIRP:
@@ -40,11 +52,14 @@ class TIRP:
     Implementation of basic methods to work with TIRPs.
     """
 
-    def __init__(self, symbols=None, relations=None, k=1, vertical_support=None,
+    def __init__(self, epsilon, max_distance, min_ver_supp, symbols=None, relations=None, k=1, vertical_support=None,
                  indices_supporting=None, parent_indices_supporting=None):
         """
         Initialize TIRP instance with default or given values.
 
+        :param epsilon: maximum amount of time between two events that we consider it as the same time
+        :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
+        :param min_ver_supp: maximum distance between two time intervals that means first one still influences the second
         :param symbols: list of symbols presenting entity in lexicographic order (labels for upper triangular matrix)
         :param relations: list of Allen's temporal relations, presenting upper triangular matrix (half matrix),
                           relations' order is by columns from left to right and from up to down in the half matrix
@@ -53,14 +68,18 @@ class TIRP:
         :param indices_supporting: list of indices of entity list that support this TIRP
         :param parent_indices_supporting: list of indices of entity list that support parent of this TIRP
         """
+        self.epsilon = epsilon
+        self.max_distance = max_distance
+        self.min_ver_supp = min_ver_supp
         self.symbols = [] if symbols is None else symbols
         self.relations = [] if relations is None else relations
         self.k = k
-        self.epsilon = 0    # maximum amount of time between two events that we consider it as the same time
-        self.max_distance = 100    # maximum distance between two time intervals that first still influences the second
         self.vertical_support = vertical_support
         self.entity_indices_supporting = None if indices_supporting is None else indices_supporting
         self.parent_entity_indices_supporting = None if parent_indices_supporting is None else parent_indices_supporting
+
+    def __repr__(self):
+        return self.print() + '\nVertical support: ' + str(self.vertical_support)
 
     def extend(self, new_symbol, new_relations):
         """
@@ -87,12 +106,12 @@ class TIRP:
         """
         Pretty print TIRP as upper triangular matrix.
 
-        :return: None
+        :return: empty string because __repr__ method is using print() method
         """
         if len(self.relations) == 0:
             return
 
-        print('\n  ‖', '   '.join(self.symbols[1:]))
+        print('\n\n  ‖', '   '.join(self.symbols[1:]))
         print('=' * (4 * len(self.symbols) - 1))
 
         start_index = 0
@@ -103,7 +122,7 @@ class TIRP:
             row_increment = row_id + 1
             index = start_index
             for column_id in range(len(self.symbols) - 1):
-                if column_id < row_id:      # print spaces
+                if column_id < row_id:    # print spaces
                     print('    ', end='')
                 else:   # print relation
                     print(self.relations[index], end='   ')
@@ -116,14 +135,14 @@ class TIRP:
             if row_id != len(self.symbols) - 2:
                 print()
                 print('-' * (4 * len(self.symbols) - 1))
-        print('\n')
 
-    def is_above_vertical_support(self, entity_list, min_ver_supp):
+        return ""
+
+    def is_above_vertical_support(self, entity_list):
         """
         Check if this TIRP is present in at least min_ver_supp proportion of entities.
 
         :param entity_list: list of all entities
-        :param min_ver_supp: proportion (value between 0-1) defining threshold for accepting TIRP
         :return: boolean - True if given TIRP has at least min_ver_supp support, otherwise False
         """
         if not self.check_size():
@@ -166,8 +185,7 @@ class TIRP:
         else:
             self.entity_indices_supporting = supporting_indices
 
-        return self.vertical_support >= min_ver_supp
-
+        return self.vertical_support >= self.min_ver_supp
 
 
 class Karma:
@@ -193,40 +211,51 @@ class Karma:
 
         :return: tree of up to 2-sized frequent TIRPs
         """
-        print('\n')
-        # print(entity_list)
-
         all_symbols = list(set(sum([list(entity.keys()) for entity in entity_list], [])))
-        print(all_symbols)
 
-        for entity in entity_list:
-            ordered_symbols = lexicographic_sorting(entity)
-            print(ordered_symbols)
+        tree = TreeNode('root')
+        for symbol in all_symbols:
+            tree.add_child(TreeNode(symbol))
+
+        all_TIRPs_k2 = []
+        for entity_index, entity in enumerate(entity_list):
+            ordered_ti = lexicographic_sorting(entity)
 
             # iterate through all ordered pairs
-            for i in range(len(ordered_symbols)):
-                for j in range(i + 1, len(ordered_symbols)):
-                    start_1, end_1, symbol_1 = ordered_symbols[i]
-                    start_2, end_2, symbol_2 = ordered_symbols[j]
-                    print(start_1, end_1, symbol_1, '  ', start_2, end_2, symbol_2)
+            for i in range(len(ordered_ti)):
+                for j in range(i + 1, len(ordered_ti)):
+                    start_1, end_1, symbol_1 = ordered_ti[i]
+                    start_2, end_2, symbol_2 = ordered_ti[j]
 
                     # check temporal relation between 2 time intervals
+                    temporal_relation = temporal_relations((start_1, end_1), (start_2, end_2), self.epsilon, self.max_distance)
 
+                    # make a TIRP, save it in list and count occurrences of it through loops
+                    tirp = TIRP(self.epsilon, self.max_distance, self.min_ver_supp, symbols=[symbol_1, symbol_2],
+                                relations=[temporal_relation], k=2, indices_supporting=[entity_index])
 
-                    # make a TIRP, save it in list/dict and count occurrences of it through loops
+                    same_tirp_exist = False
+                    for t in all_TIRPs_k2:
+                        if are_TIRPs_equal(t, tirp):
+                            same_tirp_exist = True
+                            t.entity_indices_supporting.append(entity_index)
+                            break
+                    if not same_tirp_exist:
+                        all_TIRPs_k2.append(tirp)
 
+        for tirp in all_TIRPs_k2:
+            # save vertical support to TIRP instances and
+            tirp.entity_indices_supporting = list(set(tirp.entity_indices_supporting))
+            tirp.vertical_support = len(tirp.entity_indices_supporting) / len(entity_list)
 
-            # delete break
-            break
+            # prune TIRPs that don't have at least min_ver_supp: assign TIRPs with enough support to the tree
+            if tirp.vertical_support >= self.min_ver_supp:
+                for child_k1 in tree.children:
+                    if child_k1.data == tirp.symbols[0]:    # tree should grow from this node symbol at K=1
+                        child_k1.add_child(TreeNode(tirp))
+                        break
 
-
-        # prune TIRPs that don't have at least min_ver_supp
-
-
-        # assign other TIRPs with enough support to the tree
-        tree = TreeNode()
-
-
+        return tree
 
 
 class Lego:
@@ -252,7 +281,11 @@ if __name__ == "__main__":
     # entity = entity_list[0]
     # plot_entity(entity)
 
-    tirp = TIRP()
+    epsilon = 0
+    max_distance = 100
+    min_ver_supp = 0.1
+
+    tirp = TIRP(epsilon, max_distance, min_ver_supp)
     # tirp.symbols = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
     # tirp.relations = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'r', 's', 't', 'u', 'v']
 
@@ -264,14 +297,21 @@ if __name__ == "__main__":
     # tirp.symbols = ['B', 'C', 'A', 'B', 'C', 'D']
     # tirp.relations = ['m', '<', 'o', '<', '<', '<', '<', '<', '<', '=', '<', '<', '<', '=', '=']
 
-    tirp.print()
+    # tirp.print()
 
-    print(tirp.is_above_vertical_support(entity_list, 0.1))
-    print(tirp.vertical_support)
+    # print(tirp.is_above_vertical_support(entity_list))
+    # print(tirp.vertical_support)
 
-    epsilon = 0
-    min_ver_supp = 0.1
-    max_distance = 100
+    karma = Karma(epsilon, max_distance, min_ver_supp)
+    tree = karma.run()
 
-    karma = Karma(epsilon, min_ver_supp, max_distance)
-    karma.run()
+    tree.print_tree()
+
+
+    # todo
+    # make a 2D list l = [[ver_supp_1, TIRP_1], [ver_supp_2, TIRP_2], [ver_supp_3, TIRP_3]]
+    # sorted(l, key=lambda x: x[0], reverse=True)
+    # print sorted list
+
+    # make transition table
+

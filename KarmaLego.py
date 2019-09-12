@@ -34,16 +34,28 @@ class TreeNode:
         """
         self.children.append(child)
 
-    def print_tree(self):
+    def find_tree_nodes(self, all_nodes):
         """
-        Recursive method for printing tree of TIRPs in pre-order Depth First Search.
+        Recursive method for finding tree nodes of TIRPs in pre-order Depth First Search.
+
+        :param all_nodes: list of nodes (empty at start)
+        :return: list of all nodes that are below self in a tree structure (including self)
+        """
+        if isinstance(self.data, TIRP):
+            all_nodes.append(self.data)
+        for child in self.children:
+            child.find_tree_nodes(all_nodes)
+        return all_nodes
+
+    def print(self):
+        """
+        Print all nodes below and including self, sorted by TIRP vertical support in decreasing order
 
         :return: None
         """
-        if isinstance(self.data, TIRP):
-            print(self.data)
-        for child in self.children:
-            child.print_tree()
+        all_nodes = self.find_tree_nodes([])
+        for node in sorted(all_nodes, reverse=True):
+            print(node, end='')
 
 
 class TIRP:
@@ -79,7 +91,20 @@ class TIRP:
         self.parent_entity_indices_supporting = None if parent_indices_supporting is None else parent_indices_supporting
 
     def __repr__(self):
+        """
+        Method defining how TIRP class instance is printed to standard output.
+
+        :return: string that is printed
+        """
         return self.print() + '\nVertical support: ' + str(self.vertical_support)
+
+    def __lt__(self, other):
+        """
+        Method defining how 2 TIRPs are compared when sorting list of TIRPs.
+        :param other: the second TIRP that is compared to self
+        :return: boolean - True if self is less than other (in sense of their vertical support)
+        """
+        return self.vertical_support < other.vertical_support
 
     def extend(self, new_symbol, new_relations):
         """
@@ -278,7 +303,7 @@ class KarmaLego:
 
 
 if __name__ == "__main__":
-    # entity = entity_list[0]
+    # entity = entity_list[1]
     # plot_entity(entity)
 
     epsilon = 0
@@ -305,13 +330,5 @@ if __name__ == "__main__":
     karma = Karma(epsilon, max_distance, min_ver_supp)
     tree = karma.run()
 
-    tree.print_tree()
-
-
-    # todo
-    # make a 2D list l = [[ver_supp_1, TIRP_1], [ver_supp_2, TIRP_2], [ver_supp_3, TIRP_3]]
-    # sorted(l, key=lambda x: x[0], reverse=True)
-    # print sorted list
-
-    # make transition table
+    tree.print()
 

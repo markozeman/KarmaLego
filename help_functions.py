@@ -174,10 +174,6 @@ if __name__ == "__main__":
     i = check_symbols_lexicographically(entity_symbols, tirp_symbols, 'single')
     print(i)
 
-
     print(vertical_support_symbol(entity_list, 'C', 0.1))
-
-
-
 
 

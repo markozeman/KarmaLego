@@ -39,7 +39,7 @@ class TreeNode:
         Recursive method for finding tree nodes of TIRPs in pre-order Depth First Search.
 
         :param all_nodes: list of nodes (empty at start)
-        :return: list of all nodes that are below self in a tree structure (including self)
+        :return: list of all TIRP nodes that are below self in a tree structure (including self)
         """
         if isinstance(self.data, TIRP):
             all_nodes.append(self.data)
@@ -96,7 +96,7 @@ class TIRP:
 
         :return: string that is printed
         """
-        return self.print() + '\nVertical support: ' + str(self.vertical_support)
+        return self.print() + '\nVertical support: ' + str(self.vertical_support) + '\n'
 
     def __lt__(self, other):
         """
@@ -213,7 +213,38 @@ class TIRP:
         return self.vertical_support >= self.min_ver_supp
 
 
-class Karma:
+class KarmaLego:
+    """
+    Implementation of KarmaLego algorithm.
+    """
+
+    def __init__(self, epsilon, max_distance, min_ver_supp):
+        """
+        Inititalize KarmaLego instance and set needed parameters.
+
+        :param epsilon: maximum amount of time between two events that we consider it as the same time
+        :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
+        :param min_ver_supp: maximum distance between 2 time intervals that means first one still influences the second
+        """
+        self.epsilon = epsilon
+        self.max_distance = max_distance
+        self.min_ver_supp = min_ver_supp
+
+    def run(self):
+        """
+        Run KarmaLego algorithm.
+
+        :return: tree of all frequent TIRPs
+        """
+        karma = Karma(self.epsilon, self.max_distance, self.min_ver_supp)
+        tree = karma.run()
+        # tree.print()
+
+        lego = Lego(tree, self.epsilon, self.max_distance, self.min_ver_supp)
+        return lego.run_lego(tree)
+
+
+class Karma(KarmaLego):
     """
     Implementation of Karma part of KarmaLego algorithm.
     """
@@ -224,11 +255,9 @@ class Karma:
 
         :param epsilon: maximum amount of time between two events that we consider it as the same time
         :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
-        :param min_ver_supp: maximum distance between two time intervals that means first one still influences the second
+        :param min_ver_supp: maximum distance between 2 time intervals that means first one still influences the second
         """
-        self.epsilon = epsilon
-        self.max_distance = max_distance
-        self.min_ver_supp = min_ver_supp
+        super().__init__(epsilon, max_distance, min_ver_supp)
 
     def run(self):
         """
@@ -283,22 +312,64 @@ class Karma:
         return tree
 
 
-class Lego:
+class Lego(KarmaLego):
     """
     Implementation of Lego part of KarmaLego algorithm.
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, tree, epsilon, max_distance, min_ver_supp):
+        """
+        Initialize Lego instance and set needed parameters.
+
+        :param tree: tree structure that is an output of Karma part
+        :param epsilon: maximum amount of time between two events that we consider it as the same time
+        :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
+        :param min_ver_supp: maximum distance between 2 time intervals that means first one still influences the second
+        """
+        self.tree = tree
+        super().__init__(epsilon, max_distance, min_ver_supp)
+
+    def run_lego(self, node):
+        """
+        Run Lego part of algorithm.
+
+        :param node: current node of a tree (root node given as a start)
+        :return: tree of all frequent TIRPs
+        """
+
+        if isinstance(node.data, TIRP):     # True when K > 1
+            node.print()
+
+            # find all possible extensions of current TIRP node
+            all_extensions = self.all_extensions(node.data)
+            print('all extensions', all_extensions)
+
+            # for each extension check if it's above min_ver_supp
+            ok_extensions = list(filter(lambda extension: extension.is_above_vertical_support(entity_list), all_extensions))
+
+            for ext in ok_extensions:
+                pass
+                # set ext parameters (TIRP) and add it to the current node children (parent_support, indices_supporting)
 
 
-class KarmaLego:
-    """
-    Implementation of KarmaLego algorithm.
-    """
 
-    def __init__(self):
-        pass
+        for child in node.children:
+            self.run_lego(child)
+
+        return node
+
+    def all_extensions(self, tirp):
+        """
+        Find all possible extensions of the current TIRP node.
+
+        :param tirp: current TIRP node
+        :return: list of all possible extended TIRPs
+        """
+        return []
+
+
+
+
 
 
 
@@ -327,8 +398,6 @@ if __name__ == "__main__":
     # print(tirp.is_above_vertical_support(entity_list))
     # print(tirp.vertical_support)
 
-    karma = Karma(epsilon, max_distance, min_ver_supp)
-    tree = karma.run()
+    tree = KarmaLego(epsilon, max_distance, min_ver_supp).run()
 
-    tree.print()
 

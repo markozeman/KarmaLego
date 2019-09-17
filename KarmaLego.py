@@ -131,6 +131,7 @@ class TIRP:
         self.relations.extend(new_relations)
         if not self.check_size():
             print('Extension of TIRP is wrong!')
+            raise AttributeError
 
     def check_size(self):
         """
@@ -179,6 +180,7 @@ class TIRP:
     def is_above_vertical_support(self, entity_list):
         """
         Check if this TIRP is present in at least min_ver_supp proportion of entities.
+        Set some parameters of self instance.
 
         :param entity_list: list of all entities
         :return: boolean - True if given TIRP has at least min_ver_supp support, otherwise False
@@ -214,14 +216,20 @@ class TIRP:
 
                         if relations_match:
                             supporting_indices.append(index)
+                            self.indices_of_last_symbol_in_entities.append(list(matching_option)[-1])
 
-        supporting_indices = list(set(supporting_indices))     # make list unique because it can have more matches in one entity
-        self.vertical_support = len(supporting_indices) / len(entity_list)
+        self.vertical_support = len(list(set(supporting_indices))) / len(entity_list)
 
         if self.parent_entity_indices_supporting is not None:
             self.entity_indices_supporting = list(np.array(self.parent_entity_indices_supporting)[supporting_indices])
         else:
             self.entity_indices_supporting = supporting_indices
+
+        # make 2 lists the same size by uniqueness of entity_indices_supporting
+        if len(self.entity_indices_supporting) != 0:
+            sym_index_ent_index_zipped_unique = list(set(list(zip(self.indices_of_last_symbol_in_entities, self.entity_indices_supporting))))
+            self.indices_of_last_symbol_in_entities = list(np.array(sym_index_ent_index_zipped_unique)[:, 0])
+            self.entity_indices_supporting = list(np.array(sym_index_ent_index_zipped_unique)[:, 1])
 
         return self.vertical_support >= self.min_ver_supp
 
@@ -251,7 +259,6 @@ class KarmaLego:
         """
         karma = Karma(self.epsilon, self.max_distance, self.min_ver_supp)
         tree = karma.run()
-        # tree.print()
 
         lego = Lego(tree, self.epsilon, self.max_distance, self.min_ver_supp)
         return lego.run_lego(tree)
@@ -313,10 +320,11 @@ class Karma(KarmaLego):
                         all_TIRPs_k2.append(tirp)
 
         for tirp in all_TIRPs_k2:
-            # make 2 lists the same size by uniqueness of entity_indices_supporting
-            sym_index_ent_index_zipped_unique = list(set(list(zip(tirp.indices_of_last_symbol_in_entities, tirp.entity_indices_supporting))))
-            tirp.indices_of_last_symbol_in_entities = list(np.array(sym_index_ent_index_zipped_unique)[:, 0])
-            tirp.entity_indices_supporting = list(np.array(sym_index_ent_index_zipped_unique)[:, 1])
+            if len(tirp.entity_indices_supporting) != 0:
+                # make 2 lists the same size by uniqueness of entity_indices_supporting
+                sym_index_ent_index_zipped_unique = list(set(list(zip(tirp.indices_of_last_symbol_in_entities, tirp.entity_indices_supporting))))
+                tirp.indices_of_last_symbol_in_entities = list(np.array(sym_index_ent_index_zipped_unique)[:, 0])
+                tirp.entity_indices_supporting = list(np.array(sym_index_ent_index_zipped_unique)[:, 1])
 
             # save vertical support to TIRP instances
             tirp.vertical_support = len(tirp.entity_indices_supporting) / len(entity_list)
@@ -355,22 +363,30 @@ class Lego(KarmaLego):
         :param node: current node of a tree (root node given as a start)
         :return: tree of all frequent TIRPs
         """
+        # todo
+        # document rec method
+        # test whole algorithm
+        # if okay, delete commented prints
+        # test on other, bigger entity_list
 
         if isinstance(node.data, TIRP):     # True when K > 1
             node.print()
 
             # find all possible extensions of current TIRP node
             all_extensions = self.all_extensions(node.data)
-            # print('all extensions', all_extensions)
 
             # for each extension check if it's above min_ver_supp
             ok_extensions = list(filter(lambda extension: extension.is_above_vertical_support(entity_list), all_extensions))
 
+            print('all extensions', len(all_extensions))
+            print('ok_extensions', len(ok_extensions))
+
             for ext in ok_extensions:
-                pass
-                # set ext parameters (TIRP) and add it to the current node children (parent_support, indices_supporting)
+                # print(ext)
+                # print(ext.k, ext.vertical_support, ext.indices_of_last_symbol_in_entities, ext.entity_indices_supporting, ext.parent_entity_indices_supporting)
 
-
+                # add extended TIRP 'ext' to the current node children
+                node.add_child(TreeNode(ext))
 
         for child in node.children:
             self.run_lego(child)
@@ -385,75 +401,66 @@ class Lego(KarmaLego):
         :return: list of all possible extended TIRPs
         """
         curr_num_of_symbols = len(tirp.symbols)
-        # print('last symbol', tirp.indices_of_last_symbol_in_entities)
-        # print('ind supp: ', tirp.entity_indices_supporting)
-
+        all_possible_TIRPs = []
         for sym_index, ent_index in zip(tirp.indices_of_last_symbol_in_entities, tirp.entity_indices_supporting):
-            print('sym index', sym_index)
-            print('ent_index', ent_index)
-
-            # todo
-            # za vsak simbol od indexa naprej poženi rec in vse rešitve shranjuj v en daljši list, ki je definiran na vrhu metode
-            # testiraj delovanje
-            # dokumentiraj rec
-
-            '''
-            lexi_ordered_symbols = list(map(lambda e: e[2], lexi_ordered_entity))
-
-            tuples = [lexi_ordered_symbols[i:] for i in range(curr_num_of_symbols)]
-            consecutive_pairs_of_symbols = [pair for pair in zip(*tuples)]
-            print('cons', consecutive_pairs_of_symbols)
-            print(tuple(tirp.symbols))
-
-            ind = consecutive_pairs_of_symbols.index(tuple(tirp.symbols))
-            print(ind)
-            '''
+            # print('sym index', sym_index)
+            # print('ent_index', ent_index)
 
             lexi_ordered_entity = lexicographic_sorting(entity_list[ent_index])
 
             if curr_num_of_symbols < len(lexi_ordered_entity):
                 for after_sym_index_ti in lexi_ordered_entity[sym_index + 1:]:
-                    print('after', after_sym_index_ti)
+                    # print('after', after_sym_index_ti)
 
                     *new_ti, new_symbol = after_sym_index_ti
 
                     rel_between_last_2 = temporal_relations(lexi_ordered_entity[sym_index][:2], new_ti,
                                                             self.epsilon, self.max_distance)
-                    print('last two: ', rel_between_last_2)
+                    # print('last two: ', rel_between_last_2)
 
                     curr_rel_index = len(tirp.relations) - 1
                     decrement_index = curr_num_of_symbols - 1
 
-                    tree_node = TreeNode(rel_between_last_2)
+                    # print('3: ', curr_rel_index, decrement_index, tirp.relations)
 
-                    print('3: ', curr_rel_index, decrement_index, tirp.relations)
-                    all_paths, treeee = self.rec([], [], rel_between_last_2, tree_node, curr_rel_index, decrement_index, tirp.relations)
-                    print('\nall paths: ', all_paths)
-                    [print(child.children) for child in treeee.children]
-                    print('\n')
+                    all_paths = self.rec([], [], rel_between_last_2, curr_rel_index, decrement_index, tirp.relations)
+                    # print('\nall paths: ', all_paths)
+                    # print('\n')
 
-        # reverse it
-        # check_size for each TIRP
+                    for path in all_paths:
+                        new_relations = [rel_between_last_2, *path]
+                        new_relations.reverse()
 
-        return []
+                        tirp_copy = deepcopy(tirp)
+                        tirp_copy.extend(new_symbol, new_relations)
 
-    def rec(self, all_paths, path, BrC, tree_node, curr_rel_index, decrement_index, TIRP_relations):
+                        # set needed parameters for new TIRP tirp_copy
+                        tirp_copy.k = tirp.k + 1
+                        tirp_copy.vertical_support = None     # don't know yet
+                        tirp_copy.parent_entity_indices_supporting = tirp.entity_indices_supporting
+                        tirp_copy.entity_indices_supporting = []      # don't know yet
+                        tirp_copy.indices_of_last_symbol_in_entities = []       # don't know yet
+
+                        all_possible_TIRPs.append(tirp_copy)
+
+        return all_possible_TIRPs
+
+    def rec(self, all_paths, path, BrC, curr_rel_index, decrement_index, TIRP_relations):
         if curr_rel_index < 0:
-            all_paths.append(path)
-            return all_paths, tree_node
+            all_paths.append(deepcopy(path))
+            return
 
         ArB = TIRP_relations[curr_rel_index]
         poss_relations = transition_table[(ArB, BrC)]
 
         for poss_rel in poss_relations:
-            tree_node.add_child(TreeNode(poss_rel))
             path.append(poss_rel)
-
             decrement_index -= 1
-            self.rec(all_paths, path, poss_rel, tree_node.children[-1], curr_rel_index - decrement_index - 1, decrement_index, TIRP_relations)
+            self.rec(all_paths, path, poss_rel, curr_rel_index - decrement_index - 1, decrement_index, TIRP_relations)
             decrement_index += 1
+            del path[-1]    # delete last element from path list
 
-        return all_paths, tree_node
+        return all_paths
 
 
 if __name__ == "__main__":
@@ -464,13 +471,13 @@ if __name__ == "__main__":
     max_distance = 100
     min_ver_supp = 0.1
 
-    tirp = TIRP(epsilon, max_distance, min_ver_supp)
+    # tirp = TIRP(epsilon, max_distance, min_ver_supp)
     # tirp.symbols = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
     # tirp.relations = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'r', 's', 't', 'u', 'v']
 
     # e1
-    tirp.symbols = ['A', 'B', 'C', 'B', 'D']
-    tirp.relations = ['o', 'm', 'o', '<', '<', 'o', '<', '<', '<', '<']
+    # tirp.symbols = ['A', 'B', 'C', 'B', 'D']
+    # tirp.relations = ['o', 'm', 'o', '<', '<', 'o', '<', '<', '<', '<']
 
     # e2
     # tirp.symbols = ['B', 'C', 'A', 'B', 'C', 'D']

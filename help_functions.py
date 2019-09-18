@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 import time
+from transition_table import *
+from copy import deepcopy
 from entities import entity_list
 
 
@@ -166,6 +168,35 @@ def are_TIRPs_equal(tirp_1, tirp_2):
     return tirp_1.symbols == tirp_2.symbols and tirp_1.relations == tirp_2.relations
 
 
+def find_all_possible_extensions(all_paths, path, BrC, curr_rel_index, decrement_index, TIRP_relations):
+    """
+    Recursively find all possible relations extensions of new (last) column of TIRP based on transition table.
+
+    :param all_paths: 2D list - all possible extensions (this list is returned)
+    :param path: list - one possible relations extension of last column
+    :param BrC: current relation in new (last) column
+    :param curr_rel_index: index of current relation in TIRP_relations list
+    :param decrement_index: number defining how much curr_rel_index is decremented each time
+    :param TIRP_relations: list of relations of the current TIRP
+    :return: 2D list - each element is a list representing one of possible extensions of last column of TIRP
+             (inner lists don't contain relation between last 2 symbols i.e. the most lower relation in half matrix)
+    """
+    if curr_rel_index < 0:
+        all_paths.append(deepcopy(path))
+        return
+
+    ArB = TIRP_relations[curr_rel_index]
+    poss_relations = transition_table[(ArB, BrC)]
+
+    for poss_rel in poss_relations:
+        path.append(poss_rel)
+        decrement_index -= 1
+        find_all_possible_extensions(all_paths, path, poss_rel, curr_rel_index - decrement_index - 1, decrement_index, TIRP_relations)
+        decrement_index += 1
+        del path[-1]    # delete last element from path list
+
+    return all_paths
+
 
 if __name__ == "__main__":
     entity_symbols = ['a', 'b', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'a', 'k', 'b', 'b', 'l', 'd', 'd']
@@ -175,5 +206,4 @@ if __name__ == "__main__":
     print(i)
 
     print(vertical_support_symbol(entity_list, 'C', 0.1))
-
 

@@ -7,7 +7,6 @@ Link: https://pdfs.semanticscholar.org/a800/83f16631756d0865e13f679c2d5084df03ae
 """
 from transition_table import *
 from entities import entity_list
-from copy import deepcopy
 from help_functions import *
 
 
@@ -241,7 +240,7 @@ class KarmaLego:
 
     def __init__(self, epsilon, max_distance, min_ver_supp):
         """
-        Inititalize KarmaLego instance and set needed parameters.
+        Initialize KarmaLego instance and set needed parameters.
 
         :param epsilon: maximum amount of time between two events that we consider it as the same time
         :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
@@ -358,17 +357,11 @@ class Lego(KarmaLego):
 
     def run_lego(self, node):
         """
-        Run Lego part of algorithm.
+        Run Lego part of algorithm (recursive method).
 
         :param node: current node of a tree (root node given as a start)
         :return: tree of all frequent TIRPs
         """
-        # todo
-        # document rec method
-        # test whole algorithm
-        # if okay, delete commented prints
-        # test on other, bigger entity_list
-
         if isinstance(node.data, TIRP):     # True when K > 1
             node.print()
 
@@ -378,13 +371,7 @@ class Lego(KarmaLego):
             # for each extension check if it's above min_ver_supp
             ok_extensions = list(filter(lambda extension: extension.is_above_vertical_support(entity_list), all_extensions))
 
-            print('all extensions', len(all_extensions))
-            print('ok_extensions', len(ok_extensions))
-
             for ext in ok_extensions:
-                # print(ext)
-                # print(ext.k, ext.vertical_support, ext.indices_of_last_symbol_in_entities, ext.entity_indices_supporting, ext.parent_entity_indices_supporting)
-
                 # add extended TIRP 'ext' to the current node children
                 node.add_child(TreeNode(ext))
 
@@ -403,29 +390,19 @@ class Lego(KarmaLego):
         curr_num_of_symbols = len(tirp.symbols)
         all_possible_TIRPs = []
         for sym_index, ent_index in zip(tirp.indices_of_last_symbol_in_entities, tirp.entity_indices_supporting):
-            # print('sym index', sym_index)
-            # print('ent_index', ent_index)
-
             lexi_ordered_entity = lexicographic_sorting(entity_list[ent_index])
 
             if curr_num_of_symbols < len(lexi_ordered_entity):
                 for after_sym_index_ti in lexi_ordered_entity[sym_index + 1:]:
-                    # print('after', after_sym_index_ti)
-
                     *new_ti, new_symbol = after_sym_index_ti
 
                     rel_between_last_2 = temporal_relations(lexi_ordered_entity[sym_index][:2], new_ti,
                                                             self.epsilon, self.max_distance)
-                    # print('last two: ', rel_between_last_2)
 
                     curr_rel_index = len(tirp.relations) - 1
                     decrement_index = curr_num_of_symbols - 1
 
-                    # print('3: ', curr_rel_index, decrement_index, tirp.relations)
-
-                    all_paths = self.rec([], [], rel_between_last_2, curr_rel_index, decrement_index, tirp.relations)
-                    # print('\nall paths: ', all_paths)
-                    # print('\n')
+                    all_paths = find_all_possible_extensions([], [], rel_between_last_2, curr_rel_index, decrement_index, tirp.relations)
 
                     for path in all_paths:
                         new_relations = [rel_between_last_2, *path]
@@ -444,23 +421,6 @@ class Lego(KarmaLego):
                         all_possible_TIRPs.append(tirp_copy)
 
         return all_possible_TIRPs
-
-    def rec(self, all_paths, path, BrC, curr_rel_index, decrement_index, TIRP_relations):
-        if curr_rel_index < 0:
-            all_paths.append(deepcopy(path))
-            return
-
-        ArB = TIRP_relations[curr_rel_index]
-        poss_relations = transition_table[(ArB, BrC)]
-
-        for poss_rel in poss_relations:
-            path.append(poss_rel)
-            decrement_index -= 1
-            self.rec(all_paths, path, poss_rel, curr_rel_index - decrement_index - 1, decrement_index, TIRP_relations)
-            decrement_index += 1
-            del path[-1]    # delete last element from path list
-
-        return all_paths
 
 
 if __name__ == "__main__":
@@ -489,5 +449,11 @@ if __name__ == "__main__":
     # print(tirp.vertical_support)
 
     tree = KarmaLego(epsilon, max_distance, min_ver_supp).run()
+    # print('\n' * 100)
+    # tree.print()
+
+
+    # todo
+    # test on other, bigger entity_list
 
 

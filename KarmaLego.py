@@ -205,19 +205,26 @@ class TIRP:
             entity_symbols = list(map(lambda s: s[2], lexi_sorted))
             if len(self.symbols) <= len(entity_symbols):
                 matching_indices = check_symbols_lexicographically(entity_symbols, self.symbols, 'all')
-                if matching_indices is not None and matching_indices != [None]:     # lexicographic match found, check relations in last column of TIRP
-                    last_column_relations = self.relations[-(len(self.symbols) - 1):]
-
+                if matching_indices is not None and matching_indices != [None]:     # lexicographic match found, check all relations of TIRP
                     for matching_option in matching_indices:
-                        *entity_symbols_ti, last_symbol_ti = list(np.array(entity_ti)[list(matching_option)])
-                        relations_match = True
+                        all_relations_match = True
 
-                        for rel, symbol_ti in zip(last_column_relations, entity_symbols_ti):
-                            if rel != temporal_relations(symbol_ti, last_symbol_ti, self.epsilon, self.max_distance):
-                                relations_match = False
+                        relation_index = 0
+                        for column_count, entity_index in enumerate(matching_option[1:]):
+                            for row_count in range(column_count + 1):
+                                ti_1 = entity_ti[matching_option[row_count]]
+                                ti_2 = entity_ti[entity_index]
+
+                                if self.relations[relation_index] != temporal_relations(ti_1, ti_2, self.epsilon, self.max_distance):
+                                    all_relations_match = False
+                                    break
+
+                                relation_index += 1
+
+                            if not all_relations_match:
                                 break
 
-                        if relations_match:
+                        if all_relations_match:
                             supporting_indices.append(index)
                             self.indices_of_last_symbol_in_entities.append(list(matching_option)[-1])
 
@@ -380,16 +387,8 @@ class Lego(KarmaLego):
             # find all possible extensions of current TIRP node
             all_extensions = list(set(self.all_extensions(node.data)))
 
-            if node.data.symbols == ['A', 'E'] and node.data.relations == ['<']:
-                print('all ext:')
-
             # for each extension check if it's above min_ver_supp
             ok_extensions = list(filter(lambda extension: extension.is_above_vertical_support(entity_list), all_extensions))
-
-            if node.data.symbols == ['A', 'E'] and node.data.relations == ['<']:
-                print('all ext: ', all_extensions)
-                print('ok ext: ', ok_extensions)
-                print(list(map(lambda x: (x.parent_entity_indices_supporting, x.entity_indices_supporting), ok_extensions)))
 
             for ext in ok_extensions:
                 # add extended TIRP 'ext' to the current node children
@@ -469,12 +468,12 @@ if __name__ == "__main__":
     # print(tirp.vertical_support)
 
     tree = KarmaLego(epsilon, max_distance, min_ver_supp).run()
-    # tree.print()
+    tree.print()
 
 
     # todo
-    # test on other, bigger entity_list
-    # 1 problem from paper
+    # test on small dataset if number of TIRPs is 82/83
+    # test some TIRPS on small and big entity_list
     # comment __hash__ method in TIRP
     # fix plot_entity in help_functions.py to be more general
 

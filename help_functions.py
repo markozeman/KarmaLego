@@ -34,11 +34,12 @@ def plot_entity(entity):
 def lexicographic_sorting(entity):
     """
     Lexicographically order entity. Sorted function orders tuples first by the first element, then by the second, etc.
+    If time interval is given backwards e.g. (8, 5) it is transformed to (5, 8).
 
     :param entity: dict - key: state, value: list of time intervals of specific event
     :return: list with lexicographically ordered time intervals
     """
-    return sorted([(*ti, state) for state, time_intervals in entity.items() for ti in time_intervals])
+    return sorted([(*ti, state) if ti[0] <= ti[1] else (ti[1], ti[0], state) for state, time_intervals in entity.items() for ti in time_intervals])
 
 
 def temporal_relations(ti_1, ti_2, epsilon, max_distance):

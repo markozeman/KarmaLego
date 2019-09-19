@@ -55,6 +55,7 @@ class TreeNode:
         all_nodes = self.find_tree_nodes([])
         for node in sorted(all_nodes, reverse=True):
             print(node, end='')
+        print('\n\nAll TIRP nodes: ', len(all_nodes))
 
 
 class TIRP:
@@ -117,6 +118,9 @@ class TIRP:
         :return: boolean - True if TIRPS are equal, False otherwise
         """
         return are_TIRPs_equal(self, other)
+
+    def __hash__(self):
+        return hash((sum([(i + 1) * hash(s) for i, s in enumerate(self.symbols)]), (sum([(i + 1) * hash(s) for i, s in enumerate(self.relations)]))))
 
     def extend(self, new_symbol, new_relations):
         """
@@ -217,12 +221,12 @@ class TIRP:
                             supporting_indices.append(index)
                             self.indices_of_last_symbol_in_entities.append(list(matching_option)[-1])
 
-        self.vertical_support = len(list(set(supporting_indices))) / len(entity_list)
-
         if self.parent_entity_indices_supporting is not None:
             self.entity_indices_supporting = list(np.array(self.parent_entity_indices_supporting)[supporting_indices])
         else:
             self.entity_indices_supporting = supporting_indices
+
+        self.vertical_support = len(list(set(self.entity_indices_supporting))) / len(entity_list)
 
         # make 2 lists the same size by uniqueness of entity_indices_supporting
         if len(self.entity_indices_supporting) != 0:
@@ -286,9 +290,14 @@ class Karma(KarmaLego):
         """
         all_symbols = list(set(sum([list(entity.keys()) for entity in entity_list], [])))
 
+        frequent_symbols = []
         tree = TreeNode('root')
         for symbol in all_symbols:
-            tree.add_child(TreeNode(symbol))
+            # min_ver_supp is in this case the same for accepting symbols and TIRPs
+            has_enough_support, _ = vertical_support_symbol(entity_list, symbol, self.min_ver_supp)
+            if has_enough_support:
+                tree.add_child(TreeNode(symbol))
+                frequent_symbols.append(symbol)
 
         all_TIRPs_k2 = []
         for entity_index, entity in enumerate(entity_list):
@@ -300,23 +309,26 @@ class Karma(KarmaLego):
                     start_1, end_1, symbol_1 = ordered_ti[i]
                     start_2, end_2, symbol_2 = ordered_ti[j]
 
-                    # check temporal relation between 2 time intervals
-                    temporal_relation = temporal_relations((start_1, end_1), (start_2, end_2), self.epsilon, self.max_distance)
+                    # check if both symbols are frequent
+                    if symbol_1 in frequent_symbols and symbol_2 in frequent_symbols:
 
-                    # make a TIRP, save it in list and count occurrences of it through loops
-                    tirp = TIRP(self.epsilon, self.max_distance, self.min_ver_supp, symbols=[symbol_1, symbol_2],
-                                relations=[temporal_relation], k=2, indices_supporting=[entity_index],
-                                indices_of_last_symbol_in_entities=[j])
+                        # check temporal relation between 2 time intervals
+                        temporal_relation = temporal_relations((start_1, end_1), (start_2, end_2), self.epsilon, self.max_distance)
 
-                    same_tirp_exist = False
-                    for t in all_TIRPs_k2:
-                        if are_TIRPs_equal(t, tirp):
-                            same_tirp_exist = True
-                            t.entity_indices_supporting.append(entity_index)
-                            t.indices_of_last_symbol_in_entities.append(j)
-                            break
-                    if not same_tirp_exist:
-                        all_TIRPs_k2.append(tirp)
+                        # make a TIRP, save it in list and count occurrences of it through loops
+                        tirp = TIRP(self.epsilon, self.max_distance, self.min_ver_supp, symbols=[symbol_1, symbol_2],
+                                    relations=[temporal_relation], k=2, indices_supporting=[entity_index],
+                                    indices_of_last_symbol_in_entities=[j])
+
+                        same_tirp_exist = False
+                        for t in all_TIRPs_k2:
+                            if are_TIRPs_equal(t, tirp):
+                                same_tirp_exist = True
+                                t.entity_indices_supporting.append(entity_index)
+                                t.indices_of_last_symbol_in_entities.append(j)
+                                break
+                        if not same_tirp_exist:
+                            all_TIRPs_k2.append(tirp)
 
         for tirp in all_TIRPs_k2:
             if len(tirp.entity_indices_supporting) != 0:
@@ -326,7 +338,7 @@ class Karma(KarmaLego):
                 tirp.entity_indices_supporting = list(np.array(sym_index_ent_index_zipped_unique)[:, 1])
 
             # save vertical support to TIRP instances
-            tirp.vertical_support = len(tirp.entity_indices_supporting) / len(entity_list)
+            tirp.vertical_support = len(list(set(tirp.entity_indices_supporting))) / len(entity_list)
 
             # prune TIRPs that don't have at least min_ver_supp: assign TIRPs with enough support to the tree
             if tirp.vertical_support >= self.min_ver_supp:
@@ -363,13 +375,21 @@ class Lego(KarmaLego):
         :return: tree of all frequent TIRPs
         """
         if isinstance(node.data, TIRP):     # True when K > 1
-            node.print()
+            # node.print()
 
             # find all possible extensions of current TIRP node
-            all_extensions = self.all_extensions(node.data)
+            all_extensions = list(set(self.all_extensions(node.data)))
+
+            if node.data.symbols == ['A', 'E'] and node.data.relations == ['<']:
+                print('all ext:')
 
             # for each extension check if it's above min_ver_supp
             ok_extensions = list(filter(lambda extension: extension.is_above_vertical_support(entity_list), all_extensions))
+
+            if node.data.symbols == ['A', 'E'] and node.data.relations == ['<']:
+                print('all ext: ', all_extensions)
+                print('ok ext: ', ok_extensions)
+                print(list(map(lambda x: (x.parent_entity_indices_supporting, x.entity_indices_supporting), ok_extensions)))
 
             for ext in ok_extensions:
                 # add extended TIRP 'ext' to the current node children
@@ -449,11 +469,12 @@ if __name__ == "__main__":
     # print(tirp.vertical_support)
 
     tree = KarmaLego(epsilon, max_distance, min_ver_supp).run()
-    # print('\n' * 100)
     # tree.print()
 
 
     # todo
     # test on other, bigger entity_list
-
+    # 1 problem from paper
+    # comment __hash__ method in TIRP
+    # fix plot_entity in help_functions.py to be more general
 

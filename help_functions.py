@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
-import time
 from transition_table import *
 from copy import deepcopy
 from entities import entity_list
@@ -14,15 +13,15 @@ def plot_entity(entity):
     :param entity: dict - key: state, value: list of time intervals of specific event
     :return: None
     """
-    # colors = ['r', 'c', 'y', 'k', 'g', 'b', 'm']
-    # labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-
-    colors = ['r', 'g', 'b', 'k']
-    labels = ['D', 'C', 'B', 'A']
+    colors = ['r', 'c', 'y', 'k', 'b', 'g', 'm']
+    labels = list(entity.keys())[::-1]
+    padding = 0.25
 
     for i, label in enumerate(labels):
         for od, do in entity[label]:
-            plt.hlines(i + 1, od, do, colors=colors[i])
+            plt.hlines(i + 1, od, do, colors=colors[i % len(colors)])
+            plt.vlines(od, 1 - padding, len(labels) + padding, colors='lightgray', linestyles='dotted')
+            plt.vlines(do, 1 - padding, len(labels) + padding, colors='lightgray', linestyles='dotted')
 
     plt.yticks(np.arange(len(labels)) + 1, labels=labels)
     plt.xticks(np.arange(21))

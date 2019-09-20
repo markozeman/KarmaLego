@@ -455,27 +455,5 @@ if __name__ == "__main__":
     max_distance = 100
     min_ver_supp = 0.1
 
-    # tirp = TIRP(epsilon, max_distance, min_ver_supp)
-    # tirp.symbols = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-    # tirp.relations = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'r', 's', 't', 'u', 'v']
-
-    # e1
-    # tirp.symbols = ['A', 'B', 'C', 'B', 'D']
-    # tirp.relations = ['o', 'm', 'o', '<', '<', 'o', '<', '<', '<', '<']
-
-    # e2
-    # tirp.symbols = ['B', 'C', 'A', 'B', 'C', 'D']
-    # tirp.relations = ['m', '<', 'o', '<', '<', '<', '<', '<', '<', '=', '<', '<', '<', '=', '=']
-
-    # tirp.print()
-
-    # print(tirp.is_above_vertical_support(entity_list))
-    # print(tirp.vertical_support)
-
     tree = KarmaLego(epsilon, max_distance, min_ver_supp).run()
     tree.print()
-
-
-    # todo
-    # fix plot_entity in help_functions.py to be more general
-

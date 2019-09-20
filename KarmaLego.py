@@ -120,6 +120,11 @@ class TIRP:
         return are_TIRPs_equal(self, other)
 
     def __hash__(self):
+        """
+        Return the hash value of self object. Together with __eq__ method it is used to make list of TIRPs unique.
+
+        :return: hash value based on symbols and relations lists and their order
+        """
         return hash((sum([(i + 1) * hash(s) for i, s in enumerate(self.symbols)]), (sum([(i + 1) * hash(s) for i, s in enumerate(self.relations)]))))
 
     def extend(self, new_symbol, new_relations):
@@ -390,8 +395,8 @@ class Lego(KarmaLego):
             # for each extension check if it's above min_ver_supp
             ok_extensions = list(filter(lambda extension: extension.is_above_vertical_support(entity_list), all_extensions))
 
+            # add extended TIRP 'ext' to the current node children
             for ext in ok_extensions:
-                # add extended TIRP 'ext' to the current node children
                 node.add_child(TreeNode(ext))
 
         for child in node.children:
@@ -472,8 +477,5 @@ if __name__ == "__main__":
 
 
     # todo
-    # test on small dataset if number of TIRPs is 82/83
-    # test some TIRPS on small and big entity_list
-    # comment __hash__ method in TIRP
     # fix plot_entity in help_functions.py to be more general
 

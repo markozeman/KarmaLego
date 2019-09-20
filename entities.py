@@ -5,7 +5,7 @@ where each tuple represents one time interval of this symbol.
 """
 
 # 4 entities
-entity_list = [
+entity_list_4 = [
     {
         'A': [(2, 6), (12, 16)],
         'B': [(4, 13)],
@@ -34,9 +34,8 @@ entity_list = [
 ]
 
 
-'''
 # 2 entities
-entity_list = [
+entity_list_2 = [
     {
         'A': [(2, 8)],
         'B': [(6, 10), (12, 16)],
@@ -50,10 +49,10 @@ entity_list = [
         'D': [(14, 17)]
     }
 ]
-'''
 
 
-'''
+# 1 entity
+entity_list_1 = [
     {
         'A': [(4, 14)],
         'B': [(12, 16)],
@@ -63,5 +62,8 @@ entity_list = [
         'F': [(7, 8), (14, 15)],
         'G': [(2, 8), (13, 18)]
     }
-'''
+]
+
+
+entity_list = entity_list_4
 

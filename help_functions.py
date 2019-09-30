@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
+import json
 from transition_table import *
 from copy import deepcopy
 from entities import entity_list
@@ -196,6 +197,29 @@ def find_all_possible_extensions(all_paths, path, BrC, curr_rel_index, decrement
         del path[-1]    # delete last element from path list
 
     return all_paths
+
+
+def write2json(filename, data):
+    """
+    Write data to JSON file with name filename.
+
+    :param filename: name of the file we write to
+    :param data: data to write
+    :return: None
+    """
+    with open(filename, 'w') as f:
+        json.dump(data, f)
+
+
+def read_json(filename):
+    """
+    Read JSON file with name filename.
+
+    :param filename: name of the file we read from
+    :return: content of the file
+    """
+    with open(filename, "r") as content:
+        return json.loads(content.read())
 
 
 if __name__ == "__main__":

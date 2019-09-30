@@ -451,6 +451,9 @@ if __name__ == "__main__":
     # entity = entity_list[1]
     # plot_entity(entity)
 
+    # entity_list = read_json('entity_list.json')
+    # print(len(entity_list))
+
     epsilon = 0
     max_distance = 100
     min_ver_supp = 0.1

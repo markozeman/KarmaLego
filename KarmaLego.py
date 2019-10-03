@@ -5,8 +5,8 @@ Temporal Patterns Discovery from Multivariate Time Series via Temporal Abstracti
 
 Link: https://pdfs.semanticscholar.org/a800/83f16631756d0865e13f679c2d5084df03ae.pdf
 """
-from transition_table import *
-from entities import entity_list
+import random
+import time
 from help_functions import *
 
 
@@ -99,7 +99,7 @@ class TIRP:
 
         :return: string that is printed
         """
-        return self.print() + '\nVertical support: ' + str(self.vertical_support) + '\n'
+        return self.print() + '\n\nVertical support: ' + str(round(self.vertical_support, 3)) + '\n\n'
 
     def __lt__(self, other):
         """
@@ -158,21 +158,25 @@ class TIRP:
         if len(self.relations) == 0:
             return
 
-        print('\n\n  ‖', '   '.join(self.symbols[1:]))
-        print('=' * (4 * len(self.symbols) - 1))
+        longest_symbol_name_len = len(max(self.symbols, key=len))
+        longest_symbol_name_len_1 = len(max(self.symbols[:-1], key=len))
+
+        print('\n\n', ' ' * longest_symbol_name_len_1, '‖', '   '.join(self.symbols[1:]))
+        print('=' * (sum(len(s) for s in self.symbols[1:]) + longest_symbol_name_len_1 + 3 * len(self.symbols)))
 
         start_index = 0
         increment = 2
         for row_id in range(len(self.symbols) - 1):
-            print(self.symbols[row_id], '‖ ', end='')
+            print(self.symbols[row_id], ' ' * (longest_symbol_name_len_1 - len(self.symbols[row_id])), '‖ ', end='')
 
             row_increment = row_id + 1
             index = start_index
             for column_id in range(len(self.symbols) - 1):
+                num_of_spaces = len(self.symbols[column_id + 1]) + 2
                 if column_id < row_id:    # print spaces
-                    print('    ', end='')
+                    print(' ' * (num_of_spaces + 1), end='')
                 else:   # print relation
-                    print(self.relations[index], end='   ')
+                    print(self.relations[index], end=' ' * num_of_spaces)
                     index += row_increment
                     row_increment += 1
 
@@ -181,7 +185,7 @@ class TIRP:
 
             if row_id != len(self.symbols) - 2:
                 print()
-                print('-' * (4 * len(self.symbols) - 1))
+                print('-' * (sum(len(s) for s in self.symbols[1:]) + longest_symbol_name_len + 3 * len(self.symbols)))
 
         return ""
 
@@ -327,6 +331,9 @@ class Karma(KarmaLego):
                         # check temporal relation between 2 time intervals
                         temporal_relation = temporal_relations((start_1, end_1), (start_2, end_2), self.epsilon, self.max_distance)
 
+                        if temporal_relation is None:
+                            continue
+
                         # make a TIRP, save it in list and count occurrences of it through loops
                         tirp = TIRP(self.epsilon, self.max_distance, self.min_ver_supp, symbols=[symbol_1, symbol_2],
                                     relations=[temporal_relation], k=2, indices_supporting=[entity_index],
@@ -423,6 +430,9 @@ class Lego(KarmaLego):
                     rel_between_last_2 = temporal_relations(lexi_ordered_entity[sym_index][:2], new_ti,
                                                             self.epsilon, self.max_distance)
 
+                    if rel_between_last_2 is None:
+                        continue
+
                     curr_rel_index = len(tirp.relations) - 1
                     decrement_index = curr_num_of_symbols - 1
 
@@ -451,12 +461,43 @@ if __name__ == "__main__":
     # entity = entity_list[1]
     # plot_entity(entity)
 
-    # entity_list = read_json('entity_list.json')
-    # print(len(entity_list))
+    use_MIMIC = False
+
+    if use_MIMIC:
+        entity_list = read_json('entity_list.json')
+        entity_list = random.sample(entity_list, k=round(len(entity_list) / 1000))    # take random 0.1 % of all data
+    else:
+        from entities import entity_list    # use artificial entities from entities.py
+    print('Number of entities:', len(entity_list))
 
     epsilon = 0
     max_distance = 100
-    min_ver_supp = 0.1
+    min_ver_supp = 0.2
 
+    start = time.time()
     tree = KarmaLego(epsilon, max_distance, min_ver_supp).run()
     tree.print()
+    end = time.time()
+    print('\n', round(end - start), 's')
+
+
+    # save_pickle('tree.pickle', tree)
+
+    # tree_read = load_pickle('tree.pickle')
+    # tree_read.print()
+
+
+    # todo
+    # test KarmaLego considering diagnosis (check which table and attributes needed in pgAdmin)
+    # visualization
+    # run on all data and save it to pickle
+
+
+    # TIMES:
+    # min_ver_supp = 0.2
+    # each time different time because of random sampling
+    # 39 entities ---> 125 s (3x)
+    # 394 entities ---> 1057 s (2x)
+    # 787 entities ---> 2329 s (2x)
+    # 3936 entities ---> 12.6 h
+

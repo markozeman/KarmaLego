@@ -1,7 +1,5 @@
 import pandas as pd
 import intervals as I
-import json
-import time
 from help_functions import *
 from functools import reduce
 from collections import Counter
@@ -99,8 +97,4 @@ if __name__ == "__main__":
 
     # entity_list = prepare_prescriptions_data()
 
-    # todo
-    # test KarmaLego
-    # test KarmaLego considering diagnosis
-    # visualization
 

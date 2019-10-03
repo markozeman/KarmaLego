@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 import json
+import pickle
 from transition_table import *
 from copy import deepcopy
 from entities import entity_list
@@ -51,7 +52,7 @@ def temporal_relations(ti_1, ti_2, epsilon, max_distance):
     :param ti_2: second time interval (B.start, B.end)
     :param epsilon: maximum amount of time between two events that we consider it as the same time
     :param max_distance: maximum distance between two time intervals that means first one still influences the second
-    :return: string - one of 7 possible temporal relations
+    :return: string - one of 7 possible temporal relations or None if relation is unknown
     """
     A_start, A_end = ti_1
     B_start, B_end = ti_2
@@ -70,7 +71,7 @@ def temporal_relations(ti_1, ti_2, epsilon, max_distance):
     elif abs(B_start - A_start) <= epsilon and B_end - A_end > epsilon:     # starts
         return 's'
     else:
-        print('Wrong temporal relation!')
+        # print('Other temporal relation!')
         return None
 
 
@@ -220,6 +221,29 @@ def read_json(filename):
     """
     with open(filename, "r") as content:
         return json.loads(content.read())
+
+
+def save_pickle(filename, data):
+    """
+    Save Python object with pickle.
+
+    :param filename: name of the file we write to
+    :param data: data to write
+    :return: None
+    """
+    with open(filename, 'wb') as f:
+        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def load_pickle(filename):
+    """
+    Load pickle from disk.
+
+    :param filename: name of the file we read from
+    :return: content of the file
+    """
+    with open(filename, 'rb') as f:
+        return pickle.load(f)
 
 
 if __name__ == "__main__":

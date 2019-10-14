@@ -6,27 +6,87 @@ import pickle
 from transition_table import *
 from copy import deepcopy
 from entities import entity_list
+from KarmaLego import *     # todo delete this line
 
 
-def plot_entity(entity):
+def write2json(filename, data):
     """
-    Plot entity's time intervals of events.
+    Write data to JSON file with name filename.
 
-    :param entity: dict - key: state, value: list of time intervals of specific event
+    :param filename: name of the file we write to
+    :param data: data to write
     :return: None
     """
-    colors = ['r', 'c', 'y', 'k', 'b', 'g', 'm']
-    labels = list(entity.keys())[::-1]
-    padding = 0.25
+    with open(filename, 'w') as f:
+        json.dump(data, f)
 
+
+def read_json(filename):
+    """
+    Read JSON file with name filename.
+
+    :param filename: name of the file we read from
+    :return: content of the file
+    """
+    with open(filename, "r") as content:
+        return json.loads(content.read())
+
+
+def save_pickle(filename, data):
+    """
+    Save Python object with pickle.
+
+    :param filename: name of the file we write to
+    :param data: data to write
+    :return: None
+    """
+    with open(filename, 'wb') as f:
+        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def load_pickle(filename):
+    """
+    Load pickle from disk.
+
+    :param filename: name of the file we read from
+    :return: content of the file
+    """
+    with open(filename, 'rb') as f:
+        return pickle.load(f)
+
+
+def plot_entity(entity, ver_supp=None):
+    """
+    Plot entity's time intervals of events. Show vertical support if ver_supp is not None.
+
+    :param entity: dict - key: state, value: list of time intervals of specific event
+    :param ver_supp: optional parameter for vertical support
+    :return: None
+    """
+    plt.clf()
+
+    colors = ['r', 'c', 'y', 'k', 'b', 'g', 'm']
+    labels = list(entity.keys())
+    padding = 0.25
+    min_num = np.inf
+    max_num = -np.inf
     for i, label in enumerate(labels):
         for od, do in entity[label]:
             plt.hlines(i + 1, od, do, colors=colors[i % len(colors)])
             plt.vlines(od, 1 - padding, len(labels) + padding, colors='lightgray', linestyles='dotted')
             plt.vlines(do, 1 - padding, len(labels) + padding, colors='lightgray', linestyles='dotted')
 
+            # set min and max number
+            if od < min_num:
+                min_num = od
+            if do > max_num:
+                max_num = do
+
+    if ver_supp is not None:
+        plt.title('Vertical support: ' + str(round(ver_supp, 2)))
+
     plt.yticks(np.arange(len(labels)) + 1, labels=labels)
-    plt.xticks(np.arange(21))
+    plt.xticks(np.arange(min_num - 2, max_num + 3))
     plt.xlabel('time')
     plt.ylabel('state')
     plt.show()
@@ -200,58 +260,136 @@ def find_all_possible_extensions(all_paths, path, BrC, curr_rel_index, decrement
     return all_paths
 
 
-def write2json(filename, data):
+def visualize_tirp(tirp, entity_list, epsilon, max_distance):
     """
-    Write data to JSON file with name filename.
+    Visualize TIRP as one of existing examples from entity_list.
 
-    :param filename: name of the file we write to
-    :param data: data to write
+    :param tirp: TIRP to visualize
+    :param entity_list: list of all entities
+    :param epsilon: maximum amount of time between two events that we consider it as the same time
+    :param max_distance: maximum distance between two time intervals that means first one still influences the second
     :return: None
     """
-    with open(filename, 'w') as f:
-        json.dump(data, f)
+    all_options = []
+    for index in tirp.entity_indices_supporting:
+        patient_dict = entity_list[index]
+        lexi_ordered = lexicographic_sorting(patient_dict)
+        entity_ti = list(map(lambda x: (x[0], x[1]), lexi_ordered))
+        entity_symbols = list(map(lambda x: x[2], lexi_ordered))
+        symbols_match_TIRP = check_symbols_lexicographically(entity_symbols, tirp.symbols)
+
+        for tup in symbols_match_TIRP:
+            matching_intervals = list(np.array(entity_ti)[list(tup)])
+
+            # check if given tirp has the same relations as intervals in matching_intervals
+            curr_interval_index = 1
+            relation_index = 0
+            all_relations_match = True
+            while curr_interval_index < len(matching_intervals):
+                second_interval = matching_intervals[curr_interval_index]
+                for i in range(curr_interval_index):
+                    first_interval = matching_intervals[i]
+                    relation = temporal_relations(first_interval, second_interval, epsilon, max_distance)
+                    if relation != tirp.relations[relation_index]:
+                        all_relations_match = False
+                        break
+                    relation_index += 1
+                if not all_relations_match:
+                    break
+                curr_interval_index += 1
+
+            if all_relations_match:
+                all_options.append(matching_intervals)
+
+    labels = tirp.symbols
+    time_differences = list(map(min_max_difference, all_options))
+
+    # select option with the smallest time difference between first and last time point
+    time_intervals = all_options[time_differences.index(min(time_differences))]
+
+    # change to entity dict and plot it
+    entity = {}
+    for label, ti in zip(labels, time_intervals):
+        if label in entity:
+            entity[label].append(ti)
+        else:
+            entity[label] = [ti]
+
+    plot_entity(entity, tirp.vertical_support)
 
 
-def read_json(filename):
+def min_max_difference(l):
     """
-    Read JSON file with name filename.
+    Find difference between maximum and minimum of 2D list l.
+    First nested element is minimum, last nested element is maximum.
 
-    :param filename: name of the file we read from
-    :return: content of the file
+    :param l: 2D list of numbers
+    :return: max - min
     """
-    with open(filename, "r") as content:
-        return json.loads(content.read())
+    first, *_, last = np.concatenate(l)
+    return last - first
 
 
-def save_pickle(filename, data):
+def on_key_pressed(event, epsilon, max_distance):
     """
-    Save Python object with pickle.
+    Function that reacts on event of key pressed on the plot.
+    Pressing right arrow key moves plot forward to next TIRP.
+    Pressing left arrow key moves plot backwards to previous TIRP.
 
-    :param filename: name of the file we write to
-    :param data: data to write
+    :param event: Python mpl event
+    :param epsilon: maximum amount of time between two events that we consider it as the same time
+    :param max_distance: maximum distance between two time intervals that means first one still influences the second
+    :return:
+    """
+    global sorted_tirps, tirp_indexxx
+
+    if event.key == 'right' and tirp_indexxx < len(sorted_tirps) - 1:
+        tirp_indexxx += 1
+    elif event.key == 'left' and tirp_indexxx > 0:
+        tirp_indexxx -= 1
+
+    try:
+        visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance)
+    except RecursionError:
+        print("\nMaximum recursion depth exceeded. Figure exited. Run the program again.")
+        plt.close()
+
+
+def visualize_tirps_from_file(filename, epsilon, max_distance):
+    """
+    Visualize TIRPs from tree stored in 'filename' file based on vertical support in decreasing order.
+
+    :param filename: name of the file where tree of TIRPs is saved
+    :param epsilon: maximum amount of time between two events that we consider it as the same time
+    :param max_distance: maximum distance between two time intervals that means first one still influences the second
     :return: None
     """
-    with open(filename, 'wb') as f:
-        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+    fig = plt.figure()
+    fig.canvas.mpl_connect('key_press_event', lambda event: on_key_pressed(event, epsilon, max_distance))
 
+    tree = load_pickle(filename)
+    all_nodes = tree.find_tree_nodes([])
 
-def load_pickle(filename):
-    """
-    Load pickle from disk.
+    global sorted_tirps, tirp_indexxx
+    sorted_tirps = sorted(all_nodes, reverse=True)
+    tirp_indexxx = 0
 
-    :param filename: name of the file we read from
-    :return: content of the file
-    """
-    with open(filename, 'rb') as f:
-        return pickle.load(f)
+    visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance)     # try catch
 
 
 if __name__ == "__main__":
     entity_symbols = ['a', 'b', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'a', 'k', 'b', 'b', 'l', 'd', 'd']
     tirp_symbols = ['a', 'b', 'd', 'b', 'b', 'd']
 
-    i = check_symbols_lexicographically(entity_symbols, tirp_symbols, 'single')
-    print(i)
+    # print(check_symbols_lexicographically(entity_symbols, tirp_symbols))
+    # print(vertical_support_symbol(entity_list, 'C', 0.1))
 
-    print(vertical_support_symbol(entity_list, 'C', 0.1))
+    filename = 'data/artificial_entities_tree.pickle'
+    epsilon = 0
+    max_distance = 100
+
+    visualize_tirps_from_file(filename, epsilon, max_distance)
+
+    # clustering of patients (based on temporal relations as well)
+
 

@@ -54,7 +54,7 @@ def prepare_prescriptions_data():
 
     :return: entity list which is suitable for KarmaLego
     """
-    results = pd.read_csv('csv/prescriptions.csv', sep='\t', index_col=0)   # results from database (e.g. prescription table)
+    results = pd.read_csv('csv/pneumonia_admissions.csv', sep='\t', index_col=0)   # results from database (e.g. prescription table)
     results = results.query('enddate >= startdate')   # remove rows where enddate is before startdate
     # results = results[:100]     # comment this line
 
@@ -91,10 +91,9 @@ def prepare_prescriptions_data():
     return entity_list
 
 
-
 if __name__ == "__main__":
     pass
 
-    # entity_list = prepare_prescriptions_data()
+    entity_list = prepare_prescriptions_data()
 
-
+    # write2json('pneumonia_entity_list.json', entity_list)

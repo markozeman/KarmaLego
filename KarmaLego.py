@@ -461,11 +461,11 @@ if __name__ == "__main__":
     # entity = entity_list[1]
     # plot_entity(entity)
 
-    use_MIMIC = False
+    use_MIMIC = True
 
     if use_MIMIC:
-        entity_list = read_json('entity_list.json')
-        entity_list = random.sample(entity_list, k=round(len(entity_list) / 1000))    # take random 0.1 % of all data
+        entity_list = read_json('data/entity_list.json')
+        # entity_list = random.sample(entity_list, k=round(len(entity_list) / 1000))  # comment this line
     else:
         from entities import entity_list    # use artificial entities from entities.py
     print('Number of entities:', len(entity_list))
@@ -480,17 +480,18 @@ if __name__ == "__main__":
     end = time.time()
     print('\n', round(end - start), 's')
 
-
-    # save_pickle('tree.pickle', tree)
+    save_pickle('tree.pickle', tree)
 
     # tree_read = load_pickle('tree.pickle')
     # tree_read.print()
 
 
     # todo
-    # test KarmaLego considering diagnosis (check which table and attributes needed in pgAdmin)
+    # run on all data and save it to pickle (ran: 3. 10. at 17h)
+
+    # ko konča, prestavi tree.pickle v /data direktorij
+
     # visualization
-    # run on all data and save it to pickle
 
 
     # TIMES:
@@ -500,4 +501,10 @@ if __name__ == "__main__":
     # 394 entities ---> 1057 s (2x)
     # 787 entities ---> 2329 s (2x)
     # 3936 entities ---> 12.6 h
+    # 39362 entities --->  s
+
+    # PNEUMONIA TIMES:
+    # min_ver_supp = 0.2
+    # each time different time because of random sampling
+    # 1336 entities ---> 1447 s
 

@@ -5,8 +5,6 @@ import json
 import pickle
 from transition_table import *
 from copy import deepcopy
-from entities import entity_list
-from KarmaLego import *     # todo delete this line
 
 
 def write2json(filename, data):
@@ -63,6 +61,9 @@ def plot_entity(entity, ver_supp=None):
     :param ver_supp: optional parameter for vertical support
     :return: None
     """
+    # make fullscreen window and clear figure
+    mng = plt.get_current_fig_manager()
+    mng.resize(*mng.window.maxsize())
     plt.clf()
 
     colors = ['r', 'c', 'y', 'k', 'b', 'g', 'm']
@@ -72,7 +73,11 @@ def plot_entity(entity, ver_supp=None):
     max_num = -np.inf
     for i, label in enumerate(labels):
         for od, do in entity[label]:
-            plt.hlines(i + 1, od, do, colors=colors[i % len(colors)])
+            if od == do:    # draw time event point
+                plt.plot(od, i + 1, color=colors[i % len(colors)], marker='x', markersize=10)
+            else:   # draw time interval line
+                plt.hlines(i + 1, od, do, colors=colors[i % len(colors)])
+
             plt.vlines(od, 1 - padding, len(labels) + padding, colors='lightgray', linestyles='dotted')
             plt.vlines(do, 1 - padding, len(labels) + padding, colors='lightgray', linestyles='dotted')
 
@@ -330,19 +335,20 @@ def min_max_difference(l):
     return last - first
 
 
-def on_key_pressed(event, epsilon, max_distance):
+def on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance):
     """
     Function that reacts on event of key pressed on the plot.
     Pressing right arrow key moves plot forward to next TIRP.
     Pressing left arrow key moves plot backwards to previous TIRP.
 
     :param event: Python mpl event
+    :param sorted_tirps: list of all TIRPs ordered by vertical support in decreasing order
+    :param entity_list: list of all entities
     :param epsilon: maximum amount of time between two events that we consider it as the same time
     :param max_distance: maximum distance between two time intervals that means first one still influences the second
     :return:
     """
-    global sorted_tirps, tirp_indexxx
-
+    global tirp_indexxx
     if event.key == 'right' and tirp_indexxx < len(sorted_tirps) - 1:
         tirp_indexxx += 1
     elif event.key == 'left' and tirp_indexxx > 0:
@@ -355,26 +361,29 @@ def on_key_pressed(event, epsilon, max_distance):
         plt.close()
 
 
-def visualize_tirps_from_file(filename, epsilon, max_distance):
+def visualize_tirps_from_file(tree_filename, entity_list, epsilon, max_distance):
     """
     Visualize TIRPs from tree stored in 'filename' file based on vertical support in decreasing order.
 
-    :param filename: name of the file where tree of TIRPs is saved
+    :param tree_filename: name of the file where tree of TIRPs is saved
+    :param entity_list: list of all entities
     :param epsilon: maximum amount of time between two events that we consider it as the same time
     :param max_distance: maximum distance between two time intervals that means first one still influences the second
     :return: None
     """
-    fig = plt.figure()
-    fig.canvas.mpl_connect('key_press_event', lambda event: on_key_pressed(event, epsilon, max_distance))
-
-    tree = load_pickle(filename)
+    tree = load_pickle(tree_filename)
     all_nodes = tree.find_tree_nodes([])
-
-    global sorted_tirps, tirp_indexxx
     sorted_tirps = sorted(all_nodes, reverse=True)
+    print('Number of all TIRPs:', len(all_nodes))
+
+    global tirp_indexxx
     tirp_indexxx = 0
 
-    visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance)     # try catch
+    fig = plt.figure()
+    fig.canvas.mpl_connect('key_press_event',
+                           lambda event: on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance))
+
+    visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance)
 
 
 if __name__ == "__main__":
@@ -383,13 +392,3 @@ if __name__ == "__main__":
 
     # print(check_symbols_lexicographically(entity_symbols, tirp_symbols))
     # print(vertical_support_symbol(entity_list, 'C', 0.1))
-
-    filename = 'data/artificial_entities_tree.pickle'
-    epsilon = 0
-    max_distance = 100
-
-    visualize_tirps_from_file(filename, epsilon, max_distance)
-
-    # clustering of patients (based on temporal relations as well)
-
-

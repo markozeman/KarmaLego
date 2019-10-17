@@ -491,7 +491,6 @@ if __name__ == "__main__":
 
     # ko konča, prestavi tree.pickle v /data direktorij
 
-    # visualization
 
 
     # TIMES:

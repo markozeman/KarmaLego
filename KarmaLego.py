@@ -465,7 +465,14 @@ if __name__ == "__main__":
 
     if use_MIMIC:
         entity_list = read_json('data/entity_list.json')
-        # entity_list = random.sample(entity_list, k=round(len(entity_list) / 1000))  # comment this line
+
+        # comment next 3 lines to use all data
+        # indices_and_entities = np.array(random.sample(list(enumerate(entity_list)), k=round(len(entity_list) / 10)))
+        # sampled_indices = list(indices_and_entities[:, 0])
+        # entity_list = list(indices_and_entities[:, 1])
+        #
+        # save_pickle('data/sampled_indices.pickle', sampled_indices)
+        # write2json('data/10percent_all_admissions_entity_list.json', entity_list)
     else:
         from entities import entity_list    # use artificial entities from entities.py
     print('Number of entities:', len(entity_list))
@@ -480,17 +487,7 @@ if __name__ == "__main__":
     end = time.time()
     print('\n', round(end - start), 's')
 
-    save_pickle('tree.pickle', tree)
-
-    # tree_read = load_pickle('tree.pickle')
-    # tree_read.print()
-
-
-    # todo
-    # run on all data and save it to pickle (ran: 3. 10. at 17h)
-
-    # ko konča, prestavi tree.pickle v /data direktorij
-
+    # save_pickle('tree.pickle', tree)
 
 
     # TIMES:
@@ -500,10 +497,29 @@ if __name__ == "__main__":
     # 394 entities ---> 1057 s (2x)
     # 787 entities ---> 2329 s (2x)
     # 3936 entities ---> 12.6 h
-    # 39362 entities --->  s
+    # 39362 entities (all) ---> 19 days
+    # 25% of all data: 9840 entities ---> 39.7 h
+    # 10% of all admissions data: 3793 entities ---> 1.6 h
 
     # PNEUMONIA TIMES:
     # min_ver_supp = 0.2
     # each time different time because of random sampling
     # 1336 entities ---> 1447 s
+
+    # Note:
+    # in all_admissions.csv (from table admissions) there are 37.957 patients, 37.933 if accounting enddate >= startdate
+    # in entity_list.json (from table prescriptions) there are 39.362 patients
+
+
+    # todo
+    # push vsega na GitHub, visualize_TIRPs.py to GitHub?
+    # odpovej manualno (Irma)
+    # poženi KarmaLego samo nad pneumonio z min_ver_supp = 0.1
+    # preberi linka od Emila na mailu
+
+    # v clustering.py -> poženi z use = '10%', algorithm = 'hierarchical'
+    # poglej dendrogram (razdeli na 4 skupine), za vsako skupino najdi značilke,
+    # zakaj primer spada v določeno skupino, kaj ga zaznamuje, katere matrike najbolj značilno predstavljajo nek cluster
+
+    # počisti ven prescriptions, ki niso zanimivi (npr. elektroliti), odgovor od Emila na Slacku?
 

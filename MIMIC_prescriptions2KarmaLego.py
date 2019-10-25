@@ -54,9 +54,8 @@ def prepare_prescriptions_data():
 
     :return: entity list which is suitable for KarmaLego
     """
-    results = pd.read_csv('csv/pneumonia_admissions.csv', sep='\t', index_col=0)   # results from database (e.g. prescription table)
+    results = pd.read_csv('csv/prescriptions.csv', sep='\t', index_col=0)   # results from database (e.g. prescription table)
     results = results.query('enddate >= startdate')   # remove rows where enddate is before startdate
-    # results = results[:100]     # comment this line
 
     # patients = Counter(list(results.patient_id))
     # drugs = Counter(list(results.drug))
@@ -66,7 +65,9 @@ def prepare_prescriptions_data():
     print('Number of all patients: ', len(results.groupby('patient_id').groups.items()))
 
     entity_list = []
+    patient_IDs = []
     for patient_id, row_occurrences in results.groupby('patient_id').groups.items():
+
         patient_df = results.loc[row_occurrences]
 
         # patient's oldest startdate, datetime of the first prescription for the patient
@@ -87,6 +88,9 @@ def prepare_prescriptions_data():
             ent[drug] = remove_overlapping_intervals(ent[drug])
 
         entity_list.append(ent)
+        patient_IDs.append(patient_id)
+
+    # save_pickle('data/patient_IDs_prescriptions.pickle', patient_IDs)
 
     return entity_list
 
@@ -96,4 +100,4 @@ if __name__ == "__main__":
 
     entity_list = prepare_prescriptions_data()
 
-    # write2json('pneumonia_entity_list.json', entity_list)
+    # write2json('all_admissions_entity_list.json', entity_list)

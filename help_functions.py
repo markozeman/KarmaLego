@@ -1,10 +1,12 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import itertools
 import json
 import pickle
 from transition_table import *
 from copy import deepcopy
+from collections import defaultdict
 
 
 def write2json(filename, data):
@@ -384,6 +386,47 @@ def visualize_tirps_from_file(tree_filename, entity_list, epsilon, max_distance)
                            lambda event: on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance))
 
     visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance)
+
+
+def ordered_diagnoses4clustering():
+    """
+    Read data from 3 files and based on that return patient diagnoses in the right order.
+
+    :return: list of strings, each string has diagnoses of one patient (divided by | sign)
+    """
+    d = get_patient_diagnoses('csv/all_admissions.csv')
+    all_patient_ids = np.array(load_pickle('data/patient_IDs_admissions.pickle'))
+    randomly_sampled_indices = np.array(load_pickle('data/sampled_indices.pickle'))
+    patient_ids = list(all_patient_ids[randomly_sampled_indices])
+    ordered_diagnoses = [' | '.join(d[pat_id]) for pat_id in patient_ids]
+    return ordered_diagnoses
+
+
+def all_ordered_diagnoses4clustering():
+    """
+    Read data from 2 files and based on that return patient diagnoses in the right order.
+
+    :return: list of strings, each string has diagnoses of one patient (divided by | sign)
+    """
+    d = get_patient_diagnoses('csv/all_admissions.csv')
+    all_patient_ids = list(load_pickle('data/patient_IDs_prescriptions.pickle'))
+    ordered_diagnoses = [' | '.join(d[pat_id]) for pat_id in all_patient_ids]
+    return ordered_diagnoses
+
+
+def get_patient_diagnoses(filename):
+    """
+    Read file and make dictionary - key: patient_id, value: list of diagnoses
+
+    :param filename: name of the file to read
+    :return: dictionary connecting patients and diagnoses
+    """
+    res = pd.read_csv(filename, sep='\t', index_col=0)
+    unique_tuples = list(set(zip(res.patient_id, res.diagnosis)))
+    d = defaultdict(list)
+    for id, diag in unique_tuples:
+        d[id].append(diag)
+    return d
 
 
 if __name__ == "__main__":

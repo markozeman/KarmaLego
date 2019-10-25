@@ -77,48 +77,77 @@ def pca(mat, num_of_components):
     return PCA(n_components=num_of_components).fit_transform(mat)
 
 
-def visualize_clusters_in_2D(mat, labels, algorithm_name):
+def visualize_clusters_in_2D(mat, labels, algorithm_name, annotations, show_annotations=False, share_of_shown=1.0):
     """
     Visualize clusters after performing PCA to get 2D points.
 
     :param mat: matrix of input data, shape: (number of patients, number of TIRPs)
-    :param labels: list of labels (len = number of patients), each label is a cluster that patient belongs to
+    :param labels: list of labels (len(labels) = number of patients), each label is a cluster that patient belongs to
     :param algorithm_name: name of the clustering algorithm
+    :param annotations: list of annotations to be plotted next to points, only applicable if show_annotations is True
+                        len(labels) = len(annotations)
+    :param show_annotations: boolean - determining if annotations (IDs) are showed next to points
+    :param share_of_shown: share of annotations to show, should have value in the interval (0, 1],
+                           only applicable if show_annotations is True
     :return: None
     """
     pca_mat = pca(mat, 2)
-    plt.scatter(pca_mat[:, 0], pca_mat[:, 1], c=labels, s=5, cmap='rainbow')
+    _, ax = plt.subplots()
+    ax.scatter(pca_mat[:, 0], pca_mat[:, 1], c=labels, s=5, cmap='rainbow')
+    if show_annotations:
+        for i in range(len(labels)):
+            if i % round(1 / share_of_shown) == 0:
+                ax.annotate(annotations[i], (pca_mat[i, 0], pca_mat[i, 1]), size=8)
     plt.xlabel('x1')
     plt.ylabel('x2')
-    plt.title('Each point represents one patient after performing ' + algorithm_name)
+    plt.title('Each of %d points represents one patient after performing %s clustering and PCA' % (len(labels), algorithm_name))
     plt.show()
 
 
 if __name__ == "__main__":
-    use_MIMIC = True
-    if use_MIMIC:
-        tree_filename = 'data/pneumonia_tree.pickle'
-        num_of_patients = len(read_json('data/pneumonia_entity_list.json'))
-    else:
+    # possible options of use: 'artificial', 'pneumonia', '10%', 'all'
+    use = '10%'
+
+    algorithm = 'k-means'  # choose clustering algorithm: 'hierarchical' or 'k-means'
+    k = 3  # choose number of clusters wanted
+
+    tree_filename = ''
+    num_of_patients = 0
+    annotations = []
+    if use == 'artificial':
         tree_filename = 'data/artificial_entities_tree.pickle'
         num_of_patients = 4
+        annotations = ['Disease ' + str(i) for i in range(1, 5)]
+    elif use == 'pneumonia':
+        tree_filename = 'data/pneumonia_tree.pickle'
+        num_of_patients = len(read_json('data/pneumonia_entity_list.json'))
+        annotations = ['Pneumonia'] * num_of_patients
+    elif use == '10%':
+        # use 10% of all admissions data
+        tree_filename = 'data/10percent_all_admissions_tree.pickle'
+        num_of_patients = len(read_json('data/10percent_all_admissions_entity_list.json'))
+        annotations = ordered_diagnoses4clustering()
+    elif use == 'all':
+        # all data
+        tree_filename = 'data/tree.pickle'
+        num_of_patients = len(read_json('data/entity_list.json'))
+        annotations = all_ordered_diagnoses4clustering()
+        # note: if patient doesn't have diagnosis, his annotation is empty string ''
 
-    mat = prepare_matrix(tree_filename, num_of_patients)
+    if tree_filename:
+        mat = prepare_matrix(tree_filename, num_of_patients)
 
-    # choose clustering algorithm: 'hierarchical' or 'k-means'
-    algorithm = 'hierarchical'
-    k = 3
+        labels = None
+        if algorithm == 'k-means':
+            labels = k_means(mat, k)
+        elif algorithm == 'hierarchical':
+            metric = 'euclidean'
+            linkage = 'average'
 
-    if algorithm == 'k-means':
-        labels = k_means(mat, k)
-    elif algorithm == 'hierarchical':
-        metric = 'euclidean'
-        linkage = 'average'
+            labels = hierarchical_clustering(mat, k, metric, linkage)
+            hierarchical_clustering_dendrogram(mat, metric, linkage)
 
-        labels = hierarchical_clustering(mat, k, metric, linkage)
-        hierarchical_clustering_dendrogram(mat, metric, linkage)
-
-    print(Counter(labels))
-    visualize_clusters_in_2D(mat, labels, algorithm)
-
+        if labels is not None:
+            print(Counter(labels))
+            visualize_clusters_in_2D(mat, labels, algorithm, annotations, show_annotations=True, share_of_shown=0.001)
 

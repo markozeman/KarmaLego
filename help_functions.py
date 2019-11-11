@@ -363,17 +363,16 @@ def on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance):
         plt.close()
 
 
-def visualize_tirps_from_file(tree_filename, entity_list, epsilon, max_distance):
+def visualize_tirps_from_file(tree, entity_list, epsilon, max_distance):
     """
     Visualize TIRPs from tree stored in 'filename' file based on vertical support in decreasing order.
 
-    :param tree_filename: name of the file where tree of TIRPs is saved
+    :param tree: tree of TIRPs
     :param entity_list: list of all entities
     :param epsilon: maximum amount of time between two events that we consider it as the same time
     :param max_distance: maximum distance between two time intervals that means first one still influences the second
     :return: None
     """
-    tree = load_pickle(tree_filename)
     all_nodes = tree.find_tree_nodes([])
     sorted_tirps = sorted(all_nodes, reverse=True)
     print('Number of all TIRPs:', len(all_nodes))
@@ -427,6 +426,25 @@ def get_patient_diagnoses(filename):
     for id, diag in unique_tuples:
         d[id].append(diag)
     return d
+
+
+def remove_electrolytes(entity_list, filename):
+    """
+    Remove electrolytes from given entity_list.
+
+    :param entity_list: list of all entities
+    :param filename: name of the file to read, where electrolytes are saved
+    :return: None
+    """
+    res = pd.read_csv(filename, sep='\t', index_col=0)
+    electrolytes = list(res.Electrolytes)
+
+    for entity in entity_list:
+        for key in electrolytes:
+            try:
+                del entity[key]
+            except KeyError:  # if key doesn't exist in the dictionary just continue
+                pass
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import time
 from KarmaLego import *
 from collections import Counter
 from sklearn.decomposition import PCA
@@ -38,7 +39,7 @@ def hierarchical_clustering_dendrogram(mat, metric, linkage):
     dendrogram(Z, p=5, truncate_mode='level')
     plt.xlabel('index of patient in entity list')
     plt.ylabel('distance')
-    plt.title('Trucated dendrogram using %s linkage and %s metric' % (linkage, metric))
+    plt.title('Truncated dendrogram using %s linkage and %s metric' % (linkage, metric))
     plt.show()
 
 
@@ -104,35 +105,87 @@ def visualize_clusters_in_2D(mat, labels, algorithm_name, annotations, show_anno
     plt.show()
 
 
+def cluster_relations(k, labels, entity_list, epsilon, max_distance, min_ver_supp):
+    """
+    Find most typical relations (TIRPs) for each cluster by running KarmaLego on patients from each cluster.
+
+    :param k: number of clusters
+    :param labels: list of labels (len(labels) = number of patients), each label is a cluster that patient belongs to
+    :param entity_list: list of all entities
+    :param epsilon: maximum amount of time between two events that we consider it as the same time
+    :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
+    :param min_ver_supp: maximum distance between 2 time intervals that means first one still influences the second
+    :return: list of KarmaLego trees, one tree for each cluster
+    """
+    trees = []
+    for cluster_index in range(k):
+        print('i: ', cluster_index)
+
+        indices, = np.where(labels == cluster_index)
+
+        cluster_entity_list = list(np.array(entity_list)[indices])
+        print('num of patients:', len(cluster_entity_list))
+        # print(cluster_entity_list)
+        # plot_entity(cluster_entity_list[0], 0.2)
+        # print(len(cluster_entity_list[0].keys()))
+
+        start = time.time()
+        tree = KarmaLego(epsilon, max_distance, min_ver_supp).run(cluster_entity_list)
+        # tree.print()
+        end = time.time()
+        print('\n', round(end - start), 's')
+
+        trees.append((indices, tree))
+
+        print('\n\n')
+
+    return trees
+
+
 if __name__ == "__main__":
+    epsilon = 0
+    max_distance = 100
+    min_ver_supp = 0.3
+
+    electrolytes_removed = False
+
     # possible options of use: 'artificial', 'pneumonia', '10%', 'all'
     use = '10%'
 
-    algorithm = 'k-means'  # choose clustering algorithm: 'hierarchical' or 'k-means'
-    k = 3  # choose number of clusters wanted
+    algorithm = 'hierarchical'  # choose clustering algorithm: 'hierarchical' or 'k-means'
+    k = 4   # choose number of clusters wanted
 
     tree_filename = ''
-    num_of_patients = 0
+    entity_list = []
     annotations = []
     if use == 'artificial':
         tree_filename = 'data/artificial_entities_tree.pickle'
-        num_of_patients = 4
+        from entities import entity_list
         annotations = ['Disease ' + str(i) for i in range(1, 5)]
     elif use == 'pneumonia':
-        tree_filename = 'data/pneumonia_tree.pickle'
-        num_of_patients = len(read_json('data/pneumonia_entity_list.json'))
-        annotations = ['Pneumonia'] * num_of_patients
+        if electrolytes_removed:
+            tree_filename = 'data/pneumonia_tree_without_electrolytes_min_supp_0_05.pickle'
+        else:
+            tree_filename = 'data/pneumonia_tree.pickle'
+        entity_list = read_json('data/pneumonia_entity_list.json')
+        annotations = ['Pneumonia'] * len(entity_list)
     elif use == '10%':
         # use 10% of all admissions data
-        tree_filename = 'data/10percent_all_admissions_tree.pickle'
-        num_of_patients = len(read_json('data/10percent_all_admissions_entity_list.json'))
+        if electrolytes_removed:
+            tree_filename = 'data/10percent_all_admissions_tree_without_electrolytes_min_supp_0_1.pickle'
+        else:
+            tree_filename = 'data/10percent_all_admissions_tree.pickle'
+        entity_list = read_json('data/10percent_all_admissions_entity_list.json')
         annotations = ordered_diagnoses4clustering()
     elif use == 'all':
         # all data
         tree_filename = 'data/tree.pickle'
-        num_of_patients = len(read_json('data/entity_list.json'))
+        entity_list = read_json('data/entity_list.json')
         annotations = all_ordered_diagnoses4clustering()
         # note: if patient doesn't have diagnosis, his annotation is empty string ''
+
+    num_of_patients = len(entity_list)
+    print('num_of_patients:', num_of_patients)
 
     if tree_filename:
         mat = prepare_matrix(tree_filename, num_of_patients)
@@ -145,9 +198,17 @@ if __name__ == "__main__":
             linkage = 'average'
 
             labels = hierarchical_clustering(mat, k, metric, linkage)
-            hierarchical_clustering_dendrogram(mat, metric, linkage)
+            # hierarchical_clustering_dendrogram(mat, metric, linkage)
 
         if labels is not None:
             print(Counter(labels))
-            visualize_clusters_in_2D(mat, labels, algorithm, annotations, show_annotations=True, share_of_shown=0.001)
+            # visualize_clusters_in_2D(mat, labels, algorithm, annotations, show_annotations=True, share_of_shown=0.005)
+
+            # find typical clustered relations (run KarmaLego for each cluster)
+            cluster_trees = cluster_relations(k, labels, entity_list, epsilon, max_distance, min_ver_supp)
+            save_pickle('data/cluster_trees_min_supp_0_3.pickle', cluster_trees)
+
+    # todo
+    # run code with all data and check the results (currently min_supp = 0.3)
+    # visualize TIRPs for every cluster (currently 4 clusters)
 

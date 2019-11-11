@@ -270,17 +270,18 @@ class KarmaLego:
         self.max_distance = max_distance
         self.min_ver_supp = min_ver_supp
 
-    def run(self):
+    def run(self, entity_list):
         """
         Run KarmaLego algorithm.
 
+        :param entity_list: list of all entities
         :return: tree of all frequent TIRPs
         """
         karma = Karma(self.epsilon, self.max_distance, self.min_ver_supp)
-        tree = karma.run()
+        tree = karma.run(entity_list)
 
         lego = Lego(tree, self.epsilon, self.max_distance, self.min_ver_supp)
-        return lego.run_lego(tree)
+        return lego.run_lego(tree, entity_list)
 
 
 class Karma(KarmaLego):
@@ -298,10 +299,11 @@ class Karma(KarmaLego):
         """
         super().__init__(epsilon, max_distance, min_ver_supp)
 
-    def run(self):
+    def run(self, entity_list):
         """
         Run Karma part of algorithm.
 
+        :param entity_list: list of all entities
         :return: tree of up to 2-sized frequent TIRPs
         """
         all_symbols = list(set(sum([list(entity.keys()) for entity in entity_list], [])))
@@ -386,18 +388,19 @@ class Lego(KarmaLego):
         self.tree = tree
         super().__init__(epsilon, max_distance, min_ver_supp)
 
-    def run_lego(self, node):
+    def run_lego(self, node, entity_list):
         """
         Run Lego part of algorithm (recursive method).
 
         :param node: current node of a tree (root node given as a start)
+        :param entity_list: list of all entities
         :return: tree of all frequent TIRPs
         """
         if isinstance(node.data, TIRP):     # True when K > 1
             # node.print()
 
             # find all possible extensions of current TIRP node
-            all_extensions = list(set(self.all_extensions(node.data)))
+            all_extensions = list(set(self.all_extensions(entity_list, node.data)))
 
             # for each extension check if it's above min_ver_supp
             ok_extensions = list(filter(lambda extension: extension.is_above_vertical_support(entity_list), all_extensions))
@@ -407,14 +410,15 @@ class Lego(KarmaLego):
                 node.add_child(TreeNode(ext))
 
         for child in node.children:
-            self.run_lego(child)
+            self.run_lego(child, entity_list)
 
         return node
 
-    def all_extensions(self, tirp):
+    def all_extensions(self, entity_list, tirp):
         """
         Find all possible extensions of the current TIRP node.
 
+        :param entity_list: list of all entities
         :param tirp: current TIRP node
         :return: list of all possible extended TIRPs
         """
@@ -462,12 +466,13 @@ if __name__ == "__main__":
     # plot_entity(entity)
 
     use_MIMIC = True
+    remove_some_drugs = True
 
     if use_MIMIC:
-        entity_list = read_json('data/entity_list.json')
+        entity_list = read_json('data/10percent_all_admissions_entity_list.json')
 
         # comment next 3 lines to use all data
-        # indices_and_entities = np.array(random.sample(list(enumerate(entity_list)), k=round(len(entity_list) / 10)))
+        # indices_and_entities = np.array(random.sample(list(enumerate(entity_list)), k=round(len(entity_list) / 100)))
         # sampled_indices = list(indices_and_entities[:, 0])
         # entity_list = list(indices_and_entities[:, 1])
         #
@@ -475,6 +480,10 @@ if __name__ == "__main__":
         # write2json('data/10percent_all_admissions_entity_list.json', entity_list)
     else:
         from entities import entity_list    # use artificial entities from entities.py
+
+    if remove_some_drugs:
+        remove_electrolytes(entity_list, 'csv/electrolytes.csv')
+
     print('Number of entities:', len(entity_list))
 
     epsilon = 0
@@ -482,12 +491,12 @@ if __name__ == "__main__":
     min_ver_supp = 0.2
 
     start = time.time()
-    tree = KarmaLego(epsilon, max_distance, min_ver_supp).run()
+    tree = KarmaLego(epsilon, max_distance, min_ver_supp).run(entity_list)
     tree.print()
     end = time.time()
     print('\n', round(end - start), 's')
 
-    # save_pickle('tree.pickle', tree)
+    # save_pickle('data/10percent_all_admissions_tree_without_electrolytes_min_supp_0_1.pickle', tree)
 
 
     # TIMES:
@@ -501,25 +510,23 @@ if __name__ == "__main__":
     # 25% of all data: 9840 entities ---> 39.7 h
     # 10% of all admissions data: 3793 entities ---> 1.6 h
 
-    # PNEUMONIA TIMES:
-    # min_ver_supp = 0.2
-    # each time different time because of random sampling
-    # 1336 entities ---> 1447 s
+    # min_ver_supp = 0.1
+    # 10% of all admissions data: 3793 entities (without electrolytes) ---> 3.2 h
 
-    # Note:
+    # PNEUMONIA TIMES:
+    # min_ver_supp = 0.2: 1336 entities ---> 1447 s
+    # min_ver_supp = 0.15: 1336 entities ---> 3156 s
+    # min_ver_supp = 0.05: 1336 entities (without electrolytes) ---> 1.7 h
+
+    # NOTES:
     # in all_admissions.csv (from table admissions) there are 37.957 patients, 37.933 if accounting enddate >= startdate
     # in entity_list.json (from table prescriptions) there are 39.362 patients
 
+    # in clustering without electrolytes most of the samples are in one group (both in pneumonia and all admissions)
+
 
     # todo
-    # push vsega na GitHub, visualize_TIRPs.py to GitHub?
-    # odpovej manualno (Irma)
-    # poženi KarmaLego samo nad pneumonio z min_ver_supp = 0.1
-    # preberi linka od Emila na mailu
-
-    # v clustering.py -> poženi z use = '10%', algorithm = 'hierarchical'
-    # poglej dendrogram (razdeli na 4 skupine), za vsako skupino najdi značilke,
-    # zakaj primer spada v določeno skupino, kaj ga zaznamuje, katere matrike najbolj značilno predstavljajo nek cluster
-
-    # počisti ven prescriptions, ki niso zanimivi (npr. elektroliti), odgovor od Emila na Slacku?
+    # in clustering.py run code with parameters: use = '10%', algorithm = 'hierarchical'
+    # check dendrogram and split it to 4 groups (558, 135, 2813, 287); for each group find features and diagnoses
+    # why instance belongs into specific group, what characterizes it, which matrices most typically represent a cluster
 

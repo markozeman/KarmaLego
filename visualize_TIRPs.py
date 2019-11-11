@@ -14,10 +14,12 @@ if __name__ == "__main__":
         tree_filename = 'data/artificial_entities_tree.pickle'
         from entities import entity_list  # use artificial entities from entities.py
     elif use == 'pneumonia':
+        # for lower support use 'data/pneumonia_tree_without_electrolytes_min_supp_0_05.pickle'
         tree_filename = 'data/pneumonia_tree.pickle'
         entity_list = read_json('data/pneumonia_entity_list.json')
     elif use == '10%':
         # use 10% of all admissions data
+        # for lower support use 'data/10percent_all_admissions_tree_without_electrolytes_min_supp_0_1.pickle'
         tree_filename = 'data/10percent_all_admissions_tree.pickle'
         entity_list = read_json('data/10percent_all_admissions_entity_list.json')
     elif use == 'all':
@@ -25,5 +27,15 @@ if __name__ == "__main__":
         tree_filename = 'data/tree.pickle'
         entity_list = read_json('data/entity_list.json')
 
+    tree = load_pickle(tree_filename)
+
+    # use next 5 lines to visualize cluster TIRPs; comment later
+    tree_filename = 'data/cluster_trees_min_supp_0_3.pickle'
+    tree = load_pickle(tree_filename)
+
+    idex = 1    # index of cluster to visualize
+    entity_list = list(np.array(entity_list)[tree[idex][0]])
+    tree = tree[idex][1]
+
     if tree_filename:
-        visualize_tirps_from_file(tree_filename, entity_list, epsilon, max_distance)
+        visualize_tirps_from_file(tree, entity_list, epsilon, max_distance)

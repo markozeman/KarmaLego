@@ -521,12 +521,11 @@ if __name__ == "__main__":
     # NOTES:
     # in all_admissions.csv (from table admissions) there are 37.957 patients, 37.933 if accounting enddate >= startdate
     # in entity_list.json (from table prescriptions) there are 39.362 patients
+    # some patients from table prescriptions doesn't have any diagnoses in table admissions
 
-    # in clustering without electrolytes most of the samples are in one group (both in pneumonia and all admissions)
+    # in clustering without electrolytes most of the samples are in one group (both in pneumonia and 10% of admissions)
 
-
-    # todo
-    # in clustering.py run code with parameters: use = '10%', algorithm = 'hierarchical'
-    # check dendrogram and split it to 4 groups (558, 135, 2813, 287); for each group find features and diagnoses
-    # why instance belongs into specific group, what characterizes it, which matrices most typically represent a cluster
+    # if clustering.py is run with parameters: use = '10%', algorithm = 'hierarchical'
+    # then check dendrogram and split it to 4 groups (558, 135, 2813, 287)
+    # trees for each of 4 clusters are saved in file 'data/cluster_trees_min_supp_0_3_and_0_1.pickle'
 

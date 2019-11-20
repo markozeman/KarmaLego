@@ -105,13 +105,14 @@ def visualize_clusters_in_2D(mat, labels, algorithm_name, annotations, show_anno
     plt.show()
 
 
-def cluster_relations(k, labels, entity_list, epsilon, max_distance, min_ver_supp):
+def cluster_relations(k, labels, entity_list, ordered_diagnoses, epsilon, max_distance, min_ver_supp):
     """
     Find most typical relations (TIRPs) for each cluster by running KarmaLego on patients from each cluster.
 
     :param k: number of clusters
     :param labels: list of labels (len(labels) = number of patients), each label is a cluster that patient belongs to
     :param entity_list: list of all entities
+    :param ordered_diagnoses: list of strings, each string has diagnoses of one patient (divided by | sign)
     :param epsilon: maximum amount of time between two events that we consider it as the same time
     :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
     :param min_ver_supp: maximum distance between 2 time intervals that means first one still influences the second
@@ -119,24 +120,22 @@ def cluster_relations(k, labels, entity_list, epsilon, max_distance, min_ver_sup
     """
     trees = []
     for cluster_index in range(k):
-        print('i: ', cluster_index)
-
         indices, = np.where(labels == cluster_index)
-
         cluster_entity_list = list(np.array(entity_list)[indices])
+        cluster_diagnoses = list(np.array(ordered_diagnoses)[indices])
+
+        print('i: ', cluster_index)
         print('num of patients:', len(cluster_entity_list))
-        # print(cluster_entity_list)
-        # plot_entity(cluster_entity_list[0], 0.2)
-        # print(len(cluster_entity_list[0].keys()))
+        print('cluster_diagnoses:', cluster_diagnoses)
 
         start = time.time()
         tree = KarmaLego(epsilon, max_distance, min_ver_supp).run(cluster_entity_list)
         # tree.print()
         end = time.time()
-        print('\n', round(end - start), 's')
 
         trees.append((indices, tree))
 
+        print(round(end - start), 's')
         print('\n\n')
 
     return trees
@@ -145,7 +144,7 @@ def cluster_relations(k, labels, entity_list, epsilon, max_distance, min_ver_sup
 if __name__ == "__main__":
     epsilon = 0
     max_distance = 100
-    min_ver_supp = 0.3
+    min_ver_supp = 0.2
 
     electrolytes_removed = False
 
@@ -153,7 +152,7 @@ if __name__ == "__main__":
     use = '10%'
 
     algorithm = 'hierarchical'  # choose clustering algorithm: 'hierarchical' or 'k-means'
-    k = 4   # choose number of clusters wanted
+    k = 3   # choose number of clusters wanted
 
     tree_filename = ''
     entity_list = []
@@ -198,17 +197,16 @@ if __name__ == "__main__":
             linkage = 'average'
 
             labels = hierarchical_clustering(mat, k, metric, linkage)
-            # hierarchical_clustering_dendrogram(mat, metric, linkage)
+            hierarchical_clustering_dendrogram(mat, metric, linkage)
 
         if labels is not None:
             print(Counter(labels))
-            # visualize_clusters_in_2D(mat, labels, algorithm, annotations, show_annotations=True, share_of_shown=0.005)
+            visualize_clusters_in_2D(mat, labels, algorithm, annotations, show_annotations=True, share_of_shown=0.005)
 
-            # find typical clustered relations (run KarmaLego for each cluster)
-            cluster_trees = cluster_relations(k, labels, entity_list, epsilon, max_distance, min_ver_supp)
-            save_pickle('data/cluster_trees_min_supp_0_3.pickle', cluster_trees)
+            # # find typical clustered relations (run KarmaLego for each cluster) and save it to pickle
+            # cluster_trees = cluster_relations(k, labels, entity_list, 0, epsilon, max_distance, min_ver_supp)
+            # save_pickle('data/cluster_trees_min_supp_0_3.pickle', cluster_trees)
 
     # todo
-    # run code with all data and check the results (currently min_supp = 0.3)
-    # visualize TIRPs for every cluster (currently 4 clusters)
+    # check again the results in visualize_TIRPs.py without electrolytes (both in pneumonia and 10% of admissions)
 

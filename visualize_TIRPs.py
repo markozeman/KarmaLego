@@ -29,11 +29,14 @@ if __name__ == "__main__":
 
     tree = load_pickle(tree_filename)
 
+    # pickle with supports: [0.3, 0.3, 0.1, 0.3]
+    # number of patients: [287, 135, 2813, 558]
+    # number of TIRPs: [12, 68, 22, 233]
     # use next 5 lines to visualize cluster TIRPs; comment later
-    tree_filename = 'data/cluster_trees_min_supp_0_3.pickle'
+    tree_filename = 'data/cluster_trees_min_supp_0_3_and_0_1.pickle'
     tree = load_pickle(tree_filename)
 
-    idex = 1    # index of cluster to visualize
+    idex = 2    # index of cluster to visualize
     entity_list = list(np.array(entity_list)[tree[idex][0]])
     tree = tree[idex][1]
 

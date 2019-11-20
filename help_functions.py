@@ -384,7 +384,8 @@ def visualize_tirps_from_file(tree, entity_list, epsilon, max_distance):
     fig.canvas.mpl_connect('key_press_event',
                            lambda event: on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance))
 
-    visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance)
+    if sorted_tirps:
+        visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance)
 
 
 def ordered_diagnoses4clustering():

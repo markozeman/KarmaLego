@@ -209,4 +209,5 @@ if __name__ == "__main__":
 
     # todo
     # check again the results in visualize_TIRPs.py without electrolytes (both in pneumonia and 10% of admissions)
+    # present this and KarmaLego trees for 4 clusters
 

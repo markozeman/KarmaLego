@@ -8,6 +8,9 @@ if __name__ == "__main__":
     # possible options of use: 'artificial', 'pneumonia', '10%', 'all'
     use = 'pneumonia groups'
 
+    # possible options of order_by: 'vertical support', 'TIRP size'
+    order_by = 'TIRP size'
+
     tree_filename = ''
     entity_list = []
     if use == 'artificial':
@@ -46,4 +49,4 @@ if __name__ == "__main__":
     # tree = tree[idex][1]
 
     if tree_filename:
-        visualize_tirps_from_file(tree, entity_list, epsilon, max_distance)
+        visualize_tirps_from_file(tree, entity_list, epsilon, max_distance, order_by)

@@ -369,26 +369,32 @@ def on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance, numb
         plt.close()
 
 
-def visualize_tirps_from_file(tree, entity_list, epsilon, max_distance):
+def visualize_tirps_from_file(tree, entity_list, epsilon, max_distance, order_by):
     """
-    Visualize TIRPs from tree stored in 'filename' file based on vertical support in decreasing order.
+    Visualize TIRPs from tree stored in 'filename' file based on vertical support in decreasing order or TIRP size.
 
     :param tree: tree of TIRPs
     :param entity_list: list of all entities
     :param epsilon: maximum amount of time between two events that we consider it as the same time
     :param max_distance: maximum distance between two time intervals that means first one still influences the second
+    :param order_by: string telling the way to sort TIRP nodes from KarmaLego tree ('vertical support' or 'TIRP size')
     :return: None
     """
     all_nodes = tree.find_tree_nodes([])
-    sorted_tirps = sorted(all_nodes, reverse=True)
-    print('Number of all TIRPs:', len(all_nodes))
 
-    global tirp_indexxx
-    tirp_indexxx = 0
+    if order_by == 'vertical support':
+        sorted_tirps = sorted(all_nodes, reverse=True)
+    elif order_by == 'TIRP size':
+        sorted_tirps = sorted(all_nodes, key=lambda tirp: (len(tirp.symbols), tirp.vertical_support), reverse=True)
+    else:
+        raise NameError('Unknown way of ordering TIRPs!')
 
     fig = plt.figure()
     fig.canvas.mpl_connect('key_press_event',
                            lambda event: on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance, len(all_nodes)))
+
+    global tirp_indexxx
+    tirp_indexxx = 0
 
     if sorted_tirps:
         visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance, len(all_nodes))

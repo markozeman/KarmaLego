@@ -5,7 +5,6 @@ Temporal Patterns Discovery from Multivariate Time Series via Temporal Abstracti
 
 Link: https://pdfs.semanticscholar.org/a800/83f16631756d0865e13f679c2d5084df03ae.pdf
 """
-import random
 import time
 from help_functions import *
 
@@ -138,8 +137,7 @@ class TIRP:
         self.symbols.append(new_symbol)
         self.relations.extend(new_relations)
         if not self.check_size():
-            print('Extension of TIRP is wrong!')
-            raise AttributeError
+            raise AttributeError('Extension of TIRP is wrong!')
 
     def check_size(self):
         """

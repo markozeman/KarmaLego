@@ -211,10 +211,9 @@ if __name__ == "__main__":
     ### done from last time
     # groups for Pneumonia patients according to length of stay -> for each group ran KarmaLego with
     # 'max_distance = max. group length of stay' and minimal support [0.05, 0.05, 0.15, 0.5] respectively
+    # implemented option to show the tree not in order of max ver. support, but in order of the biggest TIRP size first
 
     # todo
     # implement function to view TIRPs that are children of selected TIRP with one drug (parameter to function) ->
     # for example search for 'Furosemide' and find all children of this node
-
-    # implement option to show KarmaLego tree not in order of max ver. support, but in order of the biggest TIRPs first
 

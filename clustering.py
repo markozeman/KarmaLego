@@ -146,10 +146,10 @@ if __name__ == "__main__":
     max_distance = 100
     min_ver_supp = 0.2
 
-    electrolytes_removed = False
+    electrolytes_removed = True
 
     # possible options of use: 'artificial', 'pneumonia', '10%', 'all'
-    use = '10%'
+    use = 'pneumonia'
 
     algorithm = 'hierarchical'  # choose clustering algorithm: 'hierarchical' or 'k-means'
     k = 3   # choose number of clusters wanted
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         # note: if patient doesn't have diagnosis, his annotation is empty string ''
 
     num_of_patients = len(entity_list)
-    print('num_of_patients:', num_of_patients)
+    print('Number of patients:', num_of_patients)
 
     if tree_filename:
         mat = prepare_matrix(tree_filename, num_of_patients)
@@ -208,6 +208,12 @@ if __name__ == "__main__":
             # save_pickle('data/cluster_trees_min_supp_0_3.pickle', cluster_trees)
 
     # todo
-    # check again the results in visualize_TIRPs.py without electrolytes (both in pneumonia and 10% of admissions)
-    # present this and KarmaLego trees for 4 clusters
+    # find groups for Pneumonia patients according to length of stay ->
+    # for each group run KarmaLego with 'max_distance = max. group length of stay' and minimal support around 30 patients
+    # check results
+
+    # implement function to view TIRPs that are children of selected TIRP with one drug (parameter to function) ->
+    # for example search for 'Furosemide' and find all children of this node
+
+
 

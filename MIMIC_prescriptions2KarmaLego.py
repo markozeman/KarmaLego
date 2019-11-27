@@ -54,7 +54,7 @@ def prepare_prescriptions_data():
 
     :return: entity list which is suitable for KarmaLego
     """
-    results = pd.read_csv('csv/prescriptions.csv', sep='\t', index_col=0)   # results from database (e.g. prescription table)
+    results = pd.read_csv('csv/pneumonia_admissions.csv', sep='\t', index_col=0)   # results from database (e.g. prescription table)
     results = results.query('enddate >= startdate')   # remove rows where enddate is before startdate
 
     # patients = Counter(list(results.patient_id))
@@ -67,7 +67,6 @@ def prepare_prescriptions_data():
     entity_list = []
     patient_IDs = []
     for patient_id, row_occurrences in results.groupby('patient_id').groups.items():
-
         patient_df = results.loc[row_occurrences]
 
         # patient's oldest startdate, datetime of the first prescription for the patient

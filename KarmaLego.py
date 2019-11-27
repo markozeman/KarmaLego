@@ -469,13 +469,12 @@ if __name__ == "__main__":
     remove_some_drugs = True
 
     if use_MIMIC:
-        entity_list = read_json('data/10percent_all_admissions_entity_list.json')
+        entity_list = read_json('data/pneumonia_entity_list_group_3.json')
 
-        # comment next 3 lines to use all data
+        ### comment next 5 lines to use all data
         # indices_and_entities = np.array(random.sample(list(enumerate(entity_list)), k=round(len(entity_list) / 100)))
         # sampled_indices = list(indices_and_entities[:, 0])
         # entity_list = list(indices_and_entities[:, 1])
-        #
         # save_pickle('data/sampled_indices.pickle', sampled_indices)
         # write2json('data/10percent_all_admissions_entity_list.json', entity_list)
     else:
@@ -496,7 +495,8 @@ if __name__ == "__main__":
     end = time.time()
     print('\n', round(end - start), 's')
 
-    # save_pickle('data/10percent_all_admissions_tree_without_electrolytes_min_supp_0_1.pickle', tree)
+    save_pickle('data/pneumonia_tree_group_3.pickle', tree)
+
 
 
     # TIMES:

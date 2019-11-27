@@ -469,14 +469,14 @@ if __name__ == "__main__":
     remove_some_drugs = True
 
     if use_MIMIC:
-        entity_list = read_json('data/pneumonia_entity_list_group_3.json')
+        entity_list = read_json('data/json/pneumonia_entity_list_group_3.json')
 
         ### comment next 5 lines to use all data
         # indices_and_entities = np.array(random.sample(list(enumerate(entity_list)), k=round(len(entity_list) / 100)))
         # sampled_indices = list(indices_and_entities[:, 0])
         # entity_list = list(indices_and_entities[:, 1])
-        # save_pickle('data/sampled_indices.pickle', sampled_indices)
-        # write2json('data/10percent_all_admissions_entity_list.json', entity_list)
+        # save_pickle('data/pickle/sampled_indices.pickle', sampled_indices)
+        # write2json('data/json/10percent_all_admissions_entity_list.json', entity_list)
     else:
         from entities import entity_list    # use artificial entities from entities.py
 
@@ -495,7 +495,7 @@ if __name__ == "__main__":
     end = time.time()
     print('\n', round(end - start), 's')
 
-    save_pickle('data/pneumonia_tree_group_3.pickle', tree)
+    # save_pickle('data/pickle/pneumonia_tree_group_3.pickle', tree)
 
 
 
@@ -527,5 +527,5 @@ if __name__ == "__main__":
 
     # if clustering.py is run with parameters: use = '10%', algorithm = 'hierarchical'
     # then check dendrogram and split it to 4 groups (558, 135, 2813, 287)
-    # trees for each of 4 clusters are saved in file 'data/cluster_trees_min_supp_0_3_and_0_1.pickle'
+    # trees for each of 4 clusters are saved in file 'data/pickle/cluster_trees_min_supp_0_3_and_0_1.pickle'
 

@@ -55,12 +55,14 @@ def load_pickle(filename):
         return pickle.load(f)
 
 
-def plot_entity(entity, ver_supp=None):
+def plot_entity(entity, ver_supp=None, number_of_all_tirps=None, number_of_patients=None):
     """
     Plot entity's time intervals of events. Show vertical support if ver_supp is not None.
 
     :param entity: dict - key: state, value: list of time intervals of specific event
     :param ver_supp: optional parameter for vertical support
+    :param number_of_all_tirps: integer number of all TIRPs above minimum support
+    :param number_of_patients: integer number of all patients in entity list used for calculating showed TIRPs
     :return: None
     """
     # make fullscreen window and clear figure
@@ -89,8 +91,10 @@ def plot_entity(entity, ver_supp=None):
             if do > max_num:
                 max_num = do
 
-    if ver_supp is not None:
-        plt.title('Vertical support: ' + str(round(ver_supp, 2)))
+    if None not in (ver_supp, number_of_all_tirps, number_of_patients):
+        global tirp_indexxx
+        plt.title('TIRP: %d / %d\n\nVertical support: %.2f  (%d patients)'
+                  % (tirp_indexxx + 1, number_of_all_tirps, ver_supp, round(number_of_patients * ver_supp)))
 
     plt.yticks(np.arange(len(labels)) + 1, labels=labels)
     plt.xticks(np.arange(min_num - 2, max_num + 3))
@@ -267,7 +271,7 @@ def find_all_possible_extensions(all_paths, path, BrC, curr_rel_index, decrement
     return all_paths
 
 
-def visualize_tirp(tirp, entity_list, epsilon, max_distance):
+def visualize_tirp(tirp, entity_list, epsilon, max_distance, number_of_all_tirps):
     """
     Visualize TIRP as one of existing examples from entity_list.
 
@@ -275,6 +279,7 @@ def visualize_tirp(tirp, entity_list, epsilon, max_distance):
     :param entity_list: list of all entities
     :param epsilon: maximum amount of time between two events that we consider it as the same time
     :param max_distance: maximum distance between two time intervals that means first one still influences the second
+    :param number_of_all_tirps: integer number of all TIRPs above minimum support
     :return: None
     """
     all_options = []
@@ -322,7 +327,7 @@ def visualize_tirp(tirp, entity_list, epsilon, max_distance):
         else:
             entity[label] = [ti]
 
-    plot_entity(entity, tirp.vertical_support)
+    plot_entity(entity, tirp.vertical_support, number_of_all_tirps, len(entity_list))
 
 
 def min_max_difference(l):
@@ -337,7 +342,7 @@ def min_max_difference(l):
     return last - first
 
 
-def on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance):
+def on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance, number_of_all_tirps):
     """
     Function that reacts on event of key pressed on the plot.
     Pressing right arrow key moves plot forward to next TIRP.
@@ -348,6 +353,7 @@ def on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance):
     :param entity_list: list of all entities
     :param epsilon: maximum amount of time between two events that we consider it as the same time
     :param max_distance: maximum distance between two time intervals that means first one still influences the second
+    :param number_of_all_tirps: integer number of all TIRPs above minimum support
     :return:
     """
     global tirp_indexxx
@@ -357,7 +363,7 @@ def on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance):
         tirp_indexxx -= 1
 
     try:
-        visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance)
+        visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance, number_of_all_tirps)
     except RecursionError:
         print("\nMaximum recursion depth exceeded. Figure exited. Run the program again.")
         plt.close()
@@ -382,10 +388,10 @@ def visualize_tirps_from_file(tree, entity_list, epsilon, max_distance):
 
     fig = plt.figure()
     fig.canvas.mpl_connect('key_press_event',
-                           lambda event: on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance))
+                           lambda event: on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance, len(all_nodes)))
 
     if sorted_tirps:
-        visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance)
+        visualize_tirp(sorted_tirps[tirp_indexxx], entity_list, epsilon, max_distance, len(all_nodes))
 
 
 def ordered_diagnoses4clustering():
@@ -395,8 +401,8 @@ def ordered_diagnoses4clustering():
     :return: list of strings, each string has diagnoses of one patient (divided by | sign)
     """
     d = get_patient_diagnoses('csv/all_admissions.csv')
-    all_patient_ids = np.array(load_pickle('data/patient_IDs_admissions.pickle'))
-    randomly_sampled_indices = np.array(load_pickle('data/sampled_indices.pickle'))
+    all_patient_ids = np.array(load_pickle('data/pickle/patient_IDs_admissions.pickle'))
+    randomly_sampled_indices = np.array(load_pickle('data/pickle/sampled_indices.pickle'))
     patient_ids = list(all_patient_ids[randomly_sampled_indices])
     ordered_diagnoses = [' | '.join(d[pat_id]) for pat_id in patient_ids]
     return ordered_diagnoses
@@ -409,7 +415,7 @@ def all_ordered_diagnoses4clustering():
     :return: list of strings, each string has diagnoses of one patient (divided by | sign)
     """
     d = get_patient_diagnoses('csv/all_admissions.csv')
-    all_patient_ids = list(load_pickle('data/patient_IDs_prescriptions.pickle'))
+    all_patient_ids = list(load_pickle('data/pickle/patient_IDs_prescriptions.pickle'))
     ordered_diagnoses = [' | '.join(d[pat_id]) for pat_id in all_patient_ids]
     return ordered_diagnoses
 

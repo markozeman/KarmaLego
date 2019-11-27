@@ -89,7 +89,7 @@ def prepare_prescriptions_data():
         entity_list.append(ent)
         patient_IDs.append(patient_id)
 
-    # save_pickle('data/patient_IDs_prescriptions.pickle', patient_IDs)
+    # save_pickle('data/pickle/patient_IDs_prescriptions.pickle', patient_IDs)
 
     return entity_list
 

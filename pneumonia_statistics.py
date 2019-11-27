@@ -66,6 +66,6 @@ if __name__ == '__main__':
     length_of_stays = length_of_stay('../csv/pneumonia_admissions.csv')
     borders = (7, 15, 30)
     groups = make_groups(length_of_stays, borders)
-    pneumonia_entity_list = read_json('../data/pneumonia_entity_list.json')
-    # write_groups2file('../data/pneumonia_entity_list_group_', groups, pneumonia_entity_list)
+    pneumonia_entity_list = read_json('../data/json/pneumonia_entity_list.json')
+    # write_groups2file('../data/pickle/pneumonia_entity_list_group_', groups, pneumonia_entity_list)
 

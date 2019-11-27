@@ -6,26 +6,31 @@ if __name__ == "__main__":
     max_distance = 100
 
     # possible options of use: 'artificial', 'pneumonia', '10%', 'all'
-    use = 'pneumonia'
+    use = 'pneumonia groups'
 
     tree_filename = ''
     entity_list = []
     if use == 'artificial':
-        tree_filename = 'data/artificial_entities_tree.pickle'
+        tree_filename = 'data/pickle/artificial_entities_tree.pickle'
         from entities import entity_list  # use artificial entities from entities.py
     elif use == 'pneumonia':
-        tree_filename = 'data/pneumonia_tree_without_electrolytes_min_supp_0_05.pickle'    # without electrolytes
-        # tree_filename = 'data/pneumonia_tree.pickle'
-        entity_list = read_json('data/pneumonia_entity_list.json')
+        tree_filename = 'data/pickle/pneumonia_tree_without_electrolytes_min_supp_0_05.pickle'    # without electrolytes
+        # tree_filename = 'data/pickle/pneumonia_tree.pickle'
+        entity_list = read_json('data/json/pneumonia_entity_list.json')
+    elif use == 'pneumonia groups':     # according to length of stay
+        # 0: 0-7 days, 1: 8-15 days, 2: 16-30 days, 3: >30 days
+        group_index = 0    # choose which group to show based on LoS
+        tree_filename = 'data/pickle/pneumonia_tree_group_%d.pickle' % group_index
+        entity_list = read_json('data/json/pneumonia_entity_list_group_%d.json' % group_index)
     elif use == '10%':
         # use 10% of all admissions data
-        tree_filename = 'data/10percent_all_admissions_tree_without_electrolytes_min_supp_0_1.pickle'   # without electrolytes
-        # tree_filename = 'data/10percent_all_admissions_tree.pickle'
-        entity_list = read_json('data/10percent_all_admissions_entity_list.json')
+        tree_filename = 'data/pickle/10percent_all_admissions_tree_without_electrolytes_min_supp_0_1.pickle'   # without electrolytes
+        # tree_filename = 'data/pickle/10percent_all_admissions_tree.pickle'
+        entity_list = read_json('data/json/10percent_all_admissions_entity_list.json')
     elif use == 'all':
         # all data (calculations for each TIRP take some seconds)
-        tree_filename = 'data/tree.pickle'
-        entity_list = read_json('data/entity_list.json')
+        tree_filename = 'data/pickle/tree.pickle'
+        entity_list = read_json('data/json/entity_list.json')
 
     tree = load_pickle(tree_filename)
 
@@ -33,7 +38,7 @@ if __name__ == "__main__":
     # number of patients: [287, 135, 2813, 558]
     # number of TIRPs: [12, 68, 22, 233]
     ### use next 5 lines to visualize cluster TIRPs; comment this code later
-    # tree_filename = 'data/cluster_trees_min_supp_0_3_and_0_1.pickle'
+    # tree_filename = 'data/pickle/cluster_trees_min_supp_0_3_and_0_1.pickle'
     # tree = load_pickle(tree_filename)
     #
     # idex = 1    # index of cluster to visualize

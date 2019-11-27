@@ -158,28 +158,28 @@ if __name__ == "__main__":
     entity_list = []
     annotations = []
     if use == 'artificial':
-        tree_filename = 'data/artificial_entities_tree.pickle'
+        tree_filename = 'data/pickle/artificial_entities_tree.pickle'
         from entities import entity_list
         annotations = ['Disease ' + str(i) for i in range(1, 5)]
     elif use == 'pneumonia':
         if electrolytes_removed:
-            tree_filename = 'data/pneumonia_tree_without_electrolytes_min_supp_0_05.pickle'
+            tree_filename = 'data/pickle/pneumonia_tree_without_electrolytes_min_supp_0_05.pickle'
         else:
-            tree_filename = 'data/pneumonia_tree.pickle'
-        entity_list = read_json('data/pneumonia_entity_list.json')
+            tree_filename = 'data/pickle/pneumonia_tree.pickle'
+        entity_list = read_json('data/json/pneumonia_entity_list.json')
         annotations = ['Pneumonia'] * len(entity_list)
     elif use == '10%':
         # use 10% of all admissions data
         if electrolytes_removed:
-            tree_filename = 'data/10percent_all_admissions_tree_without_electrolytes_min_supp_0_1.pickle'
+            tree_filename = 'data/pickle/10percent_all_admissions_tree_without_electrolytes_min_supp_0_1.pickle'
         else:
-            tree_filename = 'data/10percent_all_admissions_tree.pickle'
-        entity_list = read_json('data/10percent_all_admissions_entity_list.json')
+            tree_filename = 'data/pickle/10percent_all_admissions_tree.pickle'
+        entity_list = read_json('data/json/10percent_all_admissions_entity_list.json')
         annotations = ordered_diagnoses4clustering()
     elif use == 'all':
         # all data
-        tree_filename = 'data/tree.pickle'
-        entity_list = read_json('data/entity_list.json')
+        tree_filename = 'data/pickle/tree.pickle'
+        entity_list = read_json('data/json/entity_list.json')
         annotations = all_ordered_diagnoses4clustering()
         # note: if patient doesn't have diagnosis, his annotation is empty string ''
 
@@ -205,15 +205,16 @@ if __name__ == "__main__":
 
             # # find typical clustered relations (run KarmaLego for each cluster) and save it to pickle
             # cluster_trees = cluster_relations(k, labels, entity_list, 0, epsilon, max_distance, min_ver_supp)
-            # save_pickle('data/cluster_trees_min_supp_0_3.pickle', cluster_trees)
+            # save_pickle('data/pickle/cluster_trees_min_supp_0_3.pickle', cluster_trees)
+
+
+    ### done from last time
+    # groups for Pneumonia patients according to length of stay -> for each group ran KarmaLego with
+    # 'max_distance = max. group length of stay' and minimal support [0.05, 0.05, 0.15, 0.5] respectively
 
     # todo
-    # find groups for Pneumonia patients according to length of stay ->
-    # for each group run KarmaLego with 'max_distance = max. group length of stay' and minimal support around 30 patients
-    # check results
-
     # implement function to view TIRPs that are children of selected TIRP with one drug (parameter to function) ->
     # for example search for 'Furosemide' and find all children of this node
 
-
+    # implement option to show KarmaLego tree not in order of max ver. support, but in order of the biggest TIRPs first
 

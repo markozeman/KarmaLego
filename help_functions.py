@@ -369,7 +369,7 @@ def on_key_pressed(event, sorted_tirps, entity_list, epsilon, max_distance, numb
         plt.close()
 
 
-def visualize_tirps_from_file(tree, entity_list, epsilon, max_distance, order_by):
+def visualize_tirps_from_file(tree, entity_list, epsilon, max_distance, order_by, search_drug=None, search_type=None):
     """
     Visualize TIRPs from tree stored in 'filename' file based on vertical support in decreasing order or TIRP size.
 
@@ -378,9 +378,31 @@ def visualize_tirps_from_file(tree, entity_list, epsilon, max_distance, order_by
     :param epsilon: maximum amount of time between two events that we consider it as the same time
     :param max_distance: maximum distance between two time intervals that means first one still influences the second
     :param order_by: string telling the way to sort TIRP nodes from KarmaLego tree ('vertical support' or 'TIRP size')
+    :param search_drug: string representing drug to search for in a tree; if None the whole tree is visualized
+    :param search_type: string representing type of drug search:
+                        'subtree' (collect all the nodes from search_drug down) or
+                        'included' (collect all nodes that have search_drug included in the TIRP);
+                        if None the whole tree is visualized
     :return: None
     """
-    all_nodes = tree.find_tree_nodes([])
+    all_nodes = tree.find_tree_nodes([])    # used if search_drug or search_type are None
+
+    if None not in (search_drug, search_type):
+        if search_type == 'subtree':
+            match_found = False
+            for child in tree.children:
+                if child.data == search_drug:
+                    match_found = True
+                    all_nodes = child.find_tree_nodes([])
+                    break
+            if not match_found:
+                raise NameError('This search drug does not exist in this tree!')
+        elif search_type == 'included':
+            all_nodes = list(filter(lambda node: search_drug in node.symbols, all_nodes))
+            if len(all_nodes) == 0:
+                raise NameError('This search drug does not exist in this tree!')
+        else:
+            raise NameError('Unknown search type!')
 
     if order_by == 'vertical support':
         sorted_tirps = sorted(all_nodes, reverse=True)

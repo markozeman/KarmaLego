@@ -9,7 +9,13 @@ if __name__ == "__main__":
     use = 'pneumonia groups'
 
     # possible options of order_by: 'vertical support', 'TIRP size'
-    order_by = 'TIRP size'
+    order_by = 'vertical support'
+
+    # possible_options of search_drug: every drug that is present in the tree
+    search_drug = 'Senna'
+
+    # possible_options of search_type: 'subtree', 'included'
+    search_type = 'included'
 
     tree_filename = ''
     entity_list = []
@@ -49,4 +55,4 @@ if __name__ == "__main__":
     # tree = tree[idex][1]
 
     if tree_filename:
-        visualize_tirps_from_file(tree, entity_list, epsilon, max_distance, order_by)
+        visualize_tirps_from_file(tree, entity_list, epsilon, max_distance, order_by, search_drug, search_type)

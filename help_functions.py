@@ -6,7 +6,7 @@ import json
 import pickle
 from transition_table import *
 from copy import deepcopy
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 
 def write2json(filename, data):

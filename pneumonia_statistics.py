@@ -1,15 +1,15 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+from KarmaLego import *
 from MIMIC_prescriptions2KarmaLego import time_difference
 from help_functions import read_json, write2json
+from clustering import prepare_matrix, visualize_clusters_in_2D
 
 
-def length_of_stay(filename):
+def length_of_stay(filename, show_plot=True):
     """
     Show histogram of admission length of stay for pneumonia patients.
 
     :param filename: name of csv file where pneumonia admissions data is saved
+    :param show_plot: boolean that indicates whether plot should be shown
     :return: list of pneumonia patients length of stay
     """
     pneumonia_data = pd.read_csv(filename, sep='\t', index_col=0)
@@ -23,13 +23,61 @@ def length_of_stay(filename):
         if los > 0:
             length_of_stays.append(los)
 
-    plt.hist(length_of_stays, bins=80)
-    plt.title('Pneumonia patients length of stay (MIMIC database)')
-    plt.xlabel('length of stay (days)')
-    plt.ylabel('number of occurrences')
-    plt.show()
+    if show_plot:
+        plt.hist(length_of_stays, bins=80)
+        plt.title('Pneumonia patients length of stay (MIMIC database)')
+        plt.xlabel('length of stay (days)')
+        plt.ylabel('number of occurrences')
+        plt.show()
 
     return length_of_stays
+
+
+def clusters_based_on_LoS():
+    """
+    Using pneumonia patients to show 4 clusters based on patient's length of stay.
+
+    :return: None
+    """
+    algorithm = 'LoS'
+    tree_filename = '../data/pickle/pneumonia_tree_without_electrolytes_min_supp_0_05.pickle'
+    entity_list = read_json('../data/json/pneumonia_entity_list.json')
+    mat = prepare_matrix(tree_filename, len(entity_list))
+
+    length_of_stays = length_of_stay('../csv/pneumonia_admissions.csv', show_plot=False)
+    borders = (7, 15, 30)
+    groups = make_groups(length_of_stays, borders)
+
+    labels = np.zeros(len(entity_list), dtype='int')
+    labels[groups[0]] = 0
+    labels[groups[1]] = 1
+    labels[groups[2]] = 1
+    labels[groups[3]] = 1
+
+    visualize_clusters_in_2D(mat, labels, algorithm, None, show_annotations=False)
+
+
+def drugs_according2groups(filename, max_drugs_plotted):
+    """
+    Show 4 histograms (one for each group) of the 'max_drugs_plotted' most common appearances of drugs in their TIRPs.
+
+    :param filename: name of json file where counter data are saved
+    :param max_drugs_plotted: maximum number of drugs that are plotted in one histogram
+    :return: None
+    """
+    drug_appearances = read_json(filename)
+    plot_indices = [1, 2, 5, 6]
+
+    plt.figure()
+    for i in range(4):
+        drugs = drug_appearances[str(i)]
+
+        plt.subplot(3, 2, plot_indices[i])
+        plt.bar(list(drugs.keys())[:max_drugs_plotted], list(drugs.values())[:max_drugs_plotted])
+        plt.xticks(rotation=45)
+        plt.ylabel('number of occurrences')
+        plt.title('Most common drugs in cluster #' + str(i))
+    plt.show()
 
 
 def make_groups(length_of_stays, borders):
@@ -69,3 +117,6 @@ if __name__ == '__main__':
     pneumonia_entity_list = read_json('../data/json/pneumonia_entity_list.json')
     # write_groups2file('../data/pickle/pneumonia_entity_list_group_', groups, pneumonia_entity_list)
 
+    drugs_according2groups('../data/json/pneumonia_groups_drug_appearances.json', 8)
+
+    clusters_based_on_LoS()

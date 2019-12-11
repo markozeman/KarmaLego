@@ -9,10 +9,11 @@ if __name__ == "__main__":
     use = 'pneumonia groups'
 
     # possible options of order_by: 'vertical support', 'TIRP size'
-    order_by = 'vertical support'
+    order_by = 'TIRP size'
 
     # possible_options of search_drug: every drug that is present in the tree
-    search_drug = 'Senna'
+    search_drug = None
+    # search_drug = 'Insulin'
 
     # possible_options of search_type: 'subtree', 'included'
     search_type = 'included'

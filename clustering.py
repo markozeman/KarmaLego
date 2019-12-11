@@ -151,8 +151,8 @@ if __name__ == "__main__":
     # possible options of use: 'artificial', 'pneumonia', '10%', 'all'
     use = 'pneumonia'
 
-    algorithm = 'hierarchical'  # choose clustering algorithm: 'hierarchical' or 'k-means'
-    k = 3   # choose number of clusters wanted
+    algorithm = 'k-means'  # choose clustering algorithm: 'hierarchical' or 'k-means'
+    k = 4   # choose number of clusters wanted
 
     tree_filename = ''
     entity_list = []
@@ -206,19 +206,4 @@ if __name__ == "__main__":
             # # find typical clustered relations (run KarmaLego for each cluster) and save it to pickle
             # cluster_trees = cluster_relations(k, labels, entity_list, 0, epsilon, max_distance, min_ver_supp)
             # save_pickle('data/pickle/cluster_trees_min_supp_0_3.pickle', cluster_trees)
-
-
-    ### done from last time
-    # groups for Pneumonia patients according to length of stay -> for each group ran KarmaLego with
-    # 'max_distance = max. group length of stay' and minimal support [0.05, 0.05, 0.15, 0.5] respectively
-
-    # implemented option to show the tree not in order of max ver. support, but in order of the biggest TIRP size first
-
-    # implement function to view TIRPs that are children of selected TIRP with one drug (parameter to function) ->
-    # for example search for 'Furosemide' and find all children of this node
-
-    # todo
-    # test implementation of search_drug and search_type
-    # make strings of drugs on plots copyable
-
 

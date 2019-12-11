@@ -527,3 +527,6 @@ if __name__ == "__main__":
     # then check dendrogram and split it to 4 groups (558, 135, 2813, 287)
     # trees for each of 4 clusters are saved in file 'data/pickle/cluster_trees_min_supp_0_3_and_0_1.pickle'
 
+    # groups made for Pneumonia patients according to length of stay -> for each group ran KarmaLego with
+    # 'max_distance = max. group length of stay' and minimal support [0.05, 0.05, 0.15, 0.5] respectively
+

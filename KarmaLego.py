@@ -69,8 +69,8 @@ class TIRP:
         Initialize TIRP instance with default or given values.
 
         :param epsilon: maximum amount of time between two events that we consider it as the same time
-        :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
-        :param min_ver_supp: maximum distance between two time intervals that means first one still influences the second
+        :param max_distance: maximum distance between two time intervals that means first one still influences the second
+        :param min_ver_supp: proportion (value between 0-1) defining threshold for accepting TIRP
         :param symbols: list of symbols presenting entity in lexicographic order (labels for upper triangular matrix)
         :param relations: list of Allen's temporal relations, presenting upper triangular matrix (half matrix),
                           relations' order is by columns from left to right and from up to down in the half matrix
@@ -261,8 +261,8 @@ class KarmaLego:
         Initialize KarmaLego instance and set needed parameters.
 
         :param epsilon: maximum amount of time between two events that we consider it as the same time
-        :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
-        :param min_ver_supp: maximum distance between 2 time intervals that means first one still influences the second
+        :param max_distance: maximum distance between 2 time intervals that means first one still influences the second
+        :param min_ver_supp: proportion (value between 0-1) defining threshold for accepting TIRP
         """
         self.epsilon = epsilon
         self.max_distance = max_distance
@@ -292,8 +292,8 @@ class Karma(KarmaLego):
         Initialize Karma instance and set needed parameters.
 
         :param epsilon: maximum amount of time between two events that we consider it as the same time
-        :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
-        :param min_ver_supp: maximum distance between 2 time intervals that means first one still influences the second
+        :param max_distance: maximum distance between 2 time intervals that means first one still influences the second
+        :param min_ver_supp: proportion (value between 0-1) defining threshold for accepting TIRP
         """
         super().__init__(epsilon, max_distance, min_ver_supp)
 
@@ -380,8 +380,8 @@ class Lego(KarmaLego):
 
         :param tree: tree structure that is an output of Karma part
         :param epsilon: maximum amount of time between two events that we consider it as the same time
-        :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
-        :param min_ver_supp: maximum distance between 2 time intervals that means first one still influences the second
+        :param max_distance: maximum distance between 2 time intervals that means first one still influences the second
+        :param min_ver_supp: proportion (value between 0-1) defining threshold for accepting TIRP
         """
         self.tree = tree
         super().__init__(epsilon, max_distance, min_ver_supp)

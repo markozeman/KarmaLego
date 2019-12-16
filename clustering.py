@@ -114,8 +114,8 @@ def cluster_relations(k, labels, entity_list, ordered_diagnoses, epsilon, max_di
     :param entity_list: list of all entities
     :param ordered_diagnoses: list of strings, each string has diagnoses of one patient (divided by | sign)
     :param epsilon: maximum amount of time between two events that we consider it as the same time
-    :param max_distance: proportion (value between 0-1) defining threshold for accepting TIRP
-    :param min_ver_supp: maximum distance between 2 time intervals that means first one still influences the second
+    :param max_distance: maximum distance between 2 time intervals that means first one still influences the second
+    :param min_ver_supp: proportion (value between 0-1) defining threshold for accepting TIRP
     :return: list of KarmaLego trees, one tree for each cluster
     """
     trees = []

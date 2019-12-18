@@ -26,7 +26,7 @@ if __name__ == "__main__":
         print(str(len(diag_cl)) + ' diagnoses from cluster #' + str(id))
         print(diag_cl, '\n')
 
-    # check indices supporting and KarmaLego trees for each of 4 clusters (hierarchical clustering with 10% of data)
+    # check indices supporting and KarmaLego trees for each of 4 clusters (hierarchical clustering with 10% of all data)
     cluster_trees = load_pickle('data/pickle/cluster_trees_min_supp_0_3_and_0_1.pickle')
     print('\n\n\n\n\n', cluster_trees)
 

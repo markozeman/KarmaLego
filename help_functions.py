@@ -488,3 +488,7 @@ if __name__ == "__main__":
 
     # print(check_symbols_lexicographically(entity_symbols, tirp_symbols))
     # print(vertical_support_symbol(entity_list, 'C', 0.1))
+
+    # from entities import entity_list
+    # entity = entity_list[1]
+    # plot_entity(entity)

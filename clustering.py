@@ -149,10 +149,10 @@ if __name__ == "__main__":
     electrolytes_removed = True
 
     # possible options of use: 'artificial', 'pneumonia', '10%', 'all'
-    use = 'pneumonia'
+    use = '10%'
 
     algorithm = 'k-means'  # choose clustering algorithm: 'hierarchical' or 'k-means'
-    k = 4   # choose number of clusters wanted
+    k = 3   # choose number of clusters wanted
 
     tree_filename = ''
     entity_list = []

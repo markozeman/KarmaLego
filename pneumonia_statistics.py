@@ -67,6 +67,7 @@ def drugs_according2groups(filename, max_drugs_plotted):
     """
     drug_appearances = read_json(filename)
     plot_indices = [1, 2, 5, 6]
+    LoS = ['1-7 days', '8-15 days', '16-30 days', 'more than 30 days']
 
     plt.figure()
     for i in range(4):
@@ -76,7 +77,7 @@ def drugs_according2groups(filename, max_drugs_plotted):
         plt.bar(list(drugs.keys())[:max_drugs_plotted], list(drugs.values())[:max_drugs_plotted])
         plt.xticks(rotation=45)
         plt.ylabel('number of occurrences')
-        plt.title('Most common drugs in cluster #' + str(i))
+        plt.title('Most common drugs in cluster #%d --- %s' % (i, LoS[i]))
     plt.show()
 
 

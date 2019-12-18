@@ -5,7 +5,7 @@ if __name__ == "__main__":
     epsilon = 0
     max_distance = 100
 
-    # possible options of use: 'artificial', 'pneumonia', '10%', 'all'
+    # possible options of use: 'artificial', 'pneumonia', 'pneumonia groups', '10%', 'all'
     use = 'pneumonia groups'
 
     # possible options of order_by: 'vertical support', 'TIRP size'
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # tree_filename = 'data/pickle/cluster_trees_min_supp_0_3_and_0_1.pickle'
     # tree = load_pickle(tree_filename)
     #
-    # idex = 1    # index of cluster to visualize
+    # idex = 3    # index of cluster to visualize
     # entity_list = list(np.array(entity_list)[tree[idex][0]])
     # tree = tree[idex][1]
 
